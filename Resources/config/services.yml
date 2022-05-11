@@ -1,41 +1,52 @@
 services:
-    # default configuration for services in *this* file
-    _defaults:
-        # automatically injects dependencies in your services
-        autowire: true
-        # automatically registers your services as commands, event subscribers, etc.
-        autoconfigure: true
-        # this means you cannot fetch services directly from the container via $container->get()
-        # if you need to do this, you can override this setting on individual services
-        public: false
+  # default configuration for services in *this* file
+  _defaults:
+    # automatically injects dependencies in your services
+    autowire: true
+    # automatically registers your services as commands, event subscribers, etc.
+    autoconfigure: true
+    # this means you cannot fetch services directly from the container via $container->get()
+    # if you need to do this, you can override this setting on individual services
+    public: false
 
-    # controllers are imported separately to make sure they're public
-    # and have a tag that allows actions to type-hint services
+  # controllers are imported separately to make sure they're public
+  # and have a tag that allows actions to type-hint services
 
-    # auto-register all controllers as services
-    Galilee\ImportExportBundle\Controller\:
-        resource: '../../Controller'
-        public: true
-        tags:
-            - 'controller.service_arguments'
+  # auto-register all controllers as services
+  Galilee\ImportExportBundle\Controller\:
+    resource: "../../Controller"
+    public: true
+    tags:
+      - "controller.service_arguments"
 
-    Galilee\ImportExportBundle\Service\:
-        resource: '../../Service/*'
-        public: true
+  Galilee\ImportExportBundle\Service\:
+    resource: "../../Service/*"
+    public: true
 
-    Galilee\ImportExportBundle\Helper\:
-        resource: '../../Helper/*'
+  Galilee\ImportExportBundle\Helper\:
+    resource: "../../Helper/*"
 
-    Galilee\ImportExportBundle\Command\:
-        resource: '../../Command/*'
+  Galilee\ImportExportBundle\Command\:
+    resource: "../../Command/*"
 
+  Galilee\ImportExportBundle\Installer\:
+    resource: "../../Installer/*"
 
-    Galilee\ImportExportBundle\EventListener\AdminBeforeListLoadListener:
-        tags:
-            - { name: kernel.event_listener, event: pimcore.admin.object.list.beforeListLoad, method: onBeforeListLoad }
+  Galilee\ImportExportBundle\Uninstaller\:
+    resource: "../../Uninstaller/*"
 
-    Galilee\ImportExportBundle\EventListener\DataObjectListener:
-        tags:
-            - { name: kernel.event_listener, event: pimcore.dataobject.preUpdate, method: onPreUpdate }
+  Galilee\ImportExportBundle\EventListener\AdminBeforeListLoadListener:
+    tags:
+      - {
+          name: kernel.event_listener,
+          event: pimcore.admin.object.list.beforeListLoad,
+          method: onBeforeListLoad,
+        }
 
-
+  Galilee\ImportExportBundle\EventListener\DataObjectListener:
+    tags:
+      - {
+          name: kernel.event_listener,
+          event: pimcore.dataobject.preUpdate,
+          method: onPreUpdate,
+        }
