@@ -1,6 +1,5 @@
 <?php
 /**
- *
  * @author Géraud ISSERTES <gissertes@galilee.fr>
  * @copyright © 2016 Galilée (www.galilee.fr)
  */
@@ -21,22 +20,21 @@ use Symfony\Component\Process\Process;
 
 class Product extends AbstractImporter
 {
+    public const COL_ID_SOCODA = 'id_socoda';
 
-    const COL_ID_SOCODA = 'id_socoda';
+    public const CHUNK = 500;
+    public const PARALLEL_IMPORT = 4;
 
-    const CHUNK = 500;
-    const PARALLEL_IMPORT = 4;
-
-    const FIELD_VALUE_SEPARATOR = ',';
-    const PARENT_FOLDER_KEY = 'products';
+    public const FIELD_VALUE_SEPARATOR = ',';
+    public const PARENT_FOLDER_KEY = 'products';
     public $parentFolder;
 
-    const PRICE = "price";
+    public const PRICE = 'price';
 
-    const SELECT_FALSE = 2;
-    const SELECT_TRUE = 1;
+    public const SELECT_FALSE = 2;
+    public const SELECT_TRUE = 1;
 
-    const PRICE_SETTING = "nePasImporterProduitsAvecPrixAZero";
+    public const PRICE_SETTING = 'nePasImporterProduitsAvecPrixAZero';
 
     /**
      * @var DataObject\Product
@@ -61,28 +59,28 @@ class Product extends AbstractImporter
 
     /**
      * @var array
-     * {csv column} => {object field}
-     * or
-     * {csv column} => array({object field}, {method}, array {arguments})
+     *            {csv column} => {object field}
+     *            or
+     *            {csv column} => array({object field}, {method}, array {arguments})
      */
     public $mapping = [
         'sku' => 'sku',
         'name' => 'name',
         'designation' => 'designation',
         'short_description' => 'short_description',
-        'description' => array('description', 'setHtmlVal'),
+        'description' => ['description', 'setHtmlVal'],
         'url_key' => 'urlKey',
         'code_client' => 'codeClient',
         'code_socoda' => 'codeSocoda',
-        'price' => array('price', 'setFloatVal'),
-        'tva' => array('tva', 'setFloatVal'),
+        'price' => ['price', 'setFloatVal'],
+        'tva' => ['tva', 'setFloatVal'],
         'meta_title' => 'metaTitle',
         'meta_keyword' => 'metaKeyword',
         'meta_description' => 'metaDescription',
-        'images' => array('images', 'multiHrefAsset', array(self::FIELD_VALUE_SEPARATOR)),
-        'documents' => array('documents', 'multiHrefAsset', array(self::FIELD_VALUE_SEPARATOR)),
+        'images' => ['images', 'multiHrefAsset', [self::FIELD_VALUE_SEPARATOR]],
+        'documents' => ['documents', 'multiHrefAsset', [self::FIELD_VALUE_SEPARATOR]],
         'in_stock' => 'inStock',
-        'quantity' => array('qty', 'setFloatVal'),
+        'quantity' => ['qty', 'setFloatVal'],
         'packaging' => 'packaging',
         'availability' => ['availability', 'handleAvailability'],
         'order' => 'position',
@@ -100,59 +98,59 @@ class Product extends AbstractImporter
 
         'reset_category' => null,
 
-        'associated_product' => array(
+        'associated_product' => [
             'associatedProduct',
             'multiHrefObject',
-            array(
+            [
                 'Product', // Class name of linked object
                 'sku', // UID
-                self::FIELD_VALUE_SEPARATOR
-            )
-        ),
+                self::FIELD_VALUE_SEPARATOR,
+            ],
+        ],
 
-        'up_selling' => array(
+        'up_selling' => [
             'upSelling',
             'multiHrefObject',
-            array(
+            [
                 'Product', // Class name of linked object
                 'sku', // UID
-                self::FIELD_VALUE_SEPARATOR
-            )
-        ),
+                self::FIELD_VALUE_SEPARATOR,
+            ],
+        ],
 
-        'cross_selling' => array(
+        'cross_selling' => [
             'crossSelling',
             'multiHrefObject',
-            array(
+            [
                 'Product', // Class name of linked object
                 'sku', // UID
-                self::FIELD_VALUE_SEPARATOR
-            )
-        ),
+                self::FIELD_VALUE_SEPARATOR,
+            ],
+        ],
 
-        'supplier' => array(
+        'supplier' => [
             'supplier',
-            'setSupplier'
-        ),
+            'setSupplier',
+        ],
 
-        'brand' => array(
+        'brand' => [
             'brand',
-            'setBrand'
-        ),
+            'setBrand',
+        ],
 
         'quantity_price_type' => [
             'quantityPriceType',
-            'setQuantityPriceType'
+            'setQuantityPriceType',
         ],
 
         'websites' => [
             'websites',
-            'setWebsites'
+            'setWebsites',
         ],
 
         'store_views' => [
             'storeViews',
-            'setStoreViews'
+            'setStoreViews',
         ],
 
         'id_socoda' => 'idSocoda',
@@ -169,35 +167,35 @@ class Product extends AbstractImporter
         'reset_images' => ['resetImages', 'handleResetImages'],
         'number_pieces_packaging' => 'numberPiecesPackaging',
         'packaging_unit' => ['packagingUnit', 'setPackagingUnit'],
-        'pcre' => ['pcre', 'handlePcre']
+        'pcre' => ['pcre', 'handlePcre'],
     ];
 
     public $loggerComponent = 'Import des produits';
 
-    const WARN_PRODUCT_ZERO_PRICE = 'WARN_PRODUCT_ZERO_PRICE';
-    const WARN_PRODUCT_FAMILY_NOT_FOUND = 'WARN_PRODUCT_FAMILY_NOT_FOUND';
-    const WARN_PRODUCT_FAMILY_NOT_VALID = 'WARN_PRODUCT_FAMILY_NOT_VALID';
-    const WARN_PRODUCT_ATTRIBUTE_NOT_FOUND = 'WARN_PRODUCT_ATTRIBUTE_NOT_FOUND';
-    const WARN_PRODUCT_CATEGORY_CODE_NOT_FOUND = 'WARN_PRODUCT_CATEGORY_CODE_NOT_FOUND';
-    const WARN_PRODUCT_CATEGORY_NAME_NOT_FOUND_IN_PARENT = 'WARN_PRODUCT_CATEGORY_NAME_NOT_FOUND_IN_PARENT';
-    const WARN_PRODUCT_WEBSITE_NOT_FOUND = 'WARN_PRODUCT_WEBSITE_NOT_FOUND';
-    const WARN_PRODUCT_WEBSITE_NO_STOREVIEW_SET = 'WARN_PRODUCT_WEBSITE_NO_STOREVIEW_SET';
-    const WARN_PRODUCT_STOREVIEW_NOT_FOUND = 'WARN_PRODUCT_STOREVIEW_NOT_FOUND';
-    const WARN_PRODUCT_STOREVIEW_NOT_FOUND_IN_WEBSITE = 'WARN_PRODUCT_STOREVIEW_NOT_FOUND_IN_WEBSITE';
-    const WARN_PRODUCT_WEBSITE_STOREVIEW_BOTH_MUST_BE_SET = 'WARN_PRODUCT_WEBSITE_STOREVIEW_BOTH_MUST_BE_SET';
-    const WARN_PRODUCT_EIFFAGE_ATTRIBUTE_BOTH_MUST_BE_SET = 'WARN_PRODUCT_EIFFAGE_ATTRIBUTE_BOTH_MUST_BE_SET';
-    const WARN_PRODUCT_EIFFAGE_ATTRIBUTE_NEWITEMUNIT_NOT_FOUND = 'WARN_PRODUCT_EIFFAGE_ATTRIBUTE_NEWITEMUNIT_NOT_FOUND';
-    const WARN_PRODUCT_EIFFAGE_ATTRIBUTE_NEWITEMEXTCATEGORYID_NOT_FOUND = 'WARN_PRODUCT_EIFFAGE_ATTRIBUTE_NEWITEMEXTCATEGORYID_NOT_FOUND';
-    const WARN_PRODUCT_SPECIAL_FROM_DATE_INVALID = 'WARN_PRODUCT_SPECIAL_FROM_DATE_INVALID';
-    const WARN_PRODUCT_SPECIAL_TO_DATE_INVALID = 'WARN_PRODUCT_SPECIAL_TO_DATE_INVALID';
-    const WARN_PRODUCT_IMAGE_COULD_NOT_BE_DELETED = 'WARN_PRODUCT_IMAGE_COULD_NOT_BE_DELETED';
-    const WARN_PRODUCT_RESET_IMAGES_ATTRIBUTE_INVALID = 'WARN_PRODUCT_RESET_IMAGES_ATTRIBUTE_INVALID';
-    const WARN_PRODUCT_ID_SOCODA_IS_NOT_UNIQUE = 'WARN_PRODUCT_ID_SOCODA_IS_NOT_UNIQUE';
-    const WARN_PRODUCT_EIFFAGE_ATTRIBUTE_PACKAGINGUNIT_NOT_FOUND = 'WARN_PRODUCT_EIFFAGE_ATTRIBUTE_PACKAGINGUNIT_NOT_FOUND';
-    const WARN_PRODUCT_PARENT_ATTRIBUTE_SET_NOT_IDENTICAL = 'WARN_PRODUCT_PARENT_ATTRIBUTE_SET_NOT_IDENTICAL';
+    public const WARN_PRODUCT_ZERO_PRICE = 'WARN_PRODUCT_ZERO_PRICE';
+    public const WARN_PRODUCT_FAMILY_NOT_FOUND = 'WARN_PRODUCT_FAMILY_NOT_FOUND';
+    public const WARN_PRODUCT_FAMILY_NOT_VALID = 'WARN_PRODUCT_FAMILY_NOT_VALID';
+    public const WARN_PRODUCT_ATTRIBUTE_NOT_FOUND = 'WARN_PRODUCT_ATTRIBUTE_NOT_FOUND';
+    public const WARN_PRODUCT_CATEGORY_CODE_NOT_FOUND = 'WARN_PRODUCT_CATEGORY_CODE_NOT_FOUND';
+    public const WARN_PRODUCT_CATEGORY_NAME_NOT_FOUND_IN_PARENT = 'WARN_PRODUCT_CATEGORY_NAME_NOT_FOUND_IN_PARENT';
+    public const WARN_PRODUCT_WEBSITE_NOT_FOUND = 'WARN_PRODUCT_WEBSITE_NOT_FOUND';
+    public const WARN_PRODUCT_WEBSITE_NO_STOREVIEW_SET = 'WARN_PRODUCT_WEBSITE_NO_STOREVIEW_SET';
+    public const WARN_PRODUCT_STOREVIEW_NOT_FOUND = 'WARN_PRODUCT_STOREVIEW_NOT_FOUND';
+    public const WARN_PRODUCT_STOREVIEW_NOT_FOUND_IN_WEBSITE = 'WARN_PRODUCT_STOREVIEW_NOT_FOUND_IN_WEBSITE';
+    public const WARN_PRODUCT_WEBSITE_STOREVIEW_BOTH_MUST_BE_SET = 'WARN_PRODUCT_WEBSITE_STOREVIEW_BOTH_MUST_BE_SET';
+    public const WARN_PRODUCT_EIFFAGE_ATTRIBUTE_BOTH_MUST_BE_SET = 'WARN_PRODUCT_EIFFAGE_ATTRIBUTE_BOTH_MUST_BE_SET';
+    public const WARN_PRODUCT_EIFFAGE_ATTRIBUTE_NEWITEMUNIT_NOT_FOUND = 'WARN_PRODUCT_EIFFAGE_ATTRIBUTE_NEWITEMUNIT_NOT_FOUND';
+    public const WARN_PRODUCT_EIFFAGE_ATTRIBUTE_NEWITEMEXTCATEGORYID_NOT_FOUND = 'WARN_PRODUCT_EIFFAGE_ATTRIBUTE_NEWITEMEXTCATEGORYID_NOT_FOUND';
+    public const WARN_PRODUCT_SPECIAL_FROM_DATE_INVALID = 'WARN_PRODUCT_SPECIAL_FROM_DATE_INVALID';
+    public const WARN_PRODUCT_SPECIAL_TO_DATE_INVALID = 'WARN_PRODUCT_SPECIAL_TO_DATE_INVALID';
+    public const WARN_PRODUCT_IMAGE_COULD_NOT_BE_DELETED = 'WARN_PRODUCT_IMAGE_COULD_NOT_BE_DELETED';
+    public const WARN_PRODUCT_RESET_IMAGES_ATTRIBUTE_INVALID = 'WARN_PRODUCT_RESET_IMAGES_ATTRIBUTE_INVALID';
+    public const WARN_PRODUCT_ID_SOCODA_IS_NOT_UNIQUE = 'WARN_PRODUCT_ID_SOCODA_IS_NOT_UNIQUE';
+    public const WARN_PRODUCT_EIFFAGE_ATTRIBUTE_PACKAGINGUNIT_NOT_FOUND = 'WARN_PRODUCT_EIFFAGE_ATTRIBUTE_PACKAGINGUNIT_NOT_FOUND';
+    public const WARN_PRODUCT_PARENT_ATTRIBUTE_SET_NOT_IDENTICAL = 'WARN_PRODUCT_PARENT_ATTRIBUTE_SET_NOT_IDENTICAL';
 
     // used as static message, therefore can't enter $warningMessage
-    const WARN_ROW_ITEM_ASSET_ORDER_CHANGED = 'No asset deleted or added but changed asset order for product.';
+    public const WARN_ROW_ITEM_ASSET_ORDER_CHANGED = 'No asset deleted or added but changed asset order for product.';
 
     protected $warningMessages = [
         self::WARN_PRODUCT_ZERO_PRICE => 'Prix produit à 0',
@@ -220,7 +218,7 @@ class Product extends AbstractImporter
         self::WARN_PRODUCT_IMAGE_COULD_NOT_BE_DELETED => 'Une image n\'a pas pu être supprimée',
         self::WARN_PRODUCT_ID_SOCODA_IS_NOT_UNIQUE => "L'attribut id_socoda n'est pas unique",
         self::WARN_PRODUCT_EIFFAGE_ATTRIBUTE_PACKAGINGUNIT_NOT_FOUND => 'Unité de conditionnement non trouvée',
-        self::WARN_PRODUCT_PARENT_ATTRIBUTE_SET_NOT_IDENTICAL => 'Famille parent/enfant non identique'
+        self::WARN_PRODUCT_PARENT_ATTRIBUTE_SET_NOT_IDENTICAL => 'Famille parent/enfant non identique',
     ];
 
     /**
@@ -260,7 +258,7 @@ class Product extends AbstractImporter
             if ($count > self::CHUNK) {
                 $this->processChunks($count);
                 $duration = microtime(true) - $t1;
-                $this->vMessage(sprintf("%f secondes", $duration));
+                $this->vMessage(sprintf('%f secondes', $duration));
             } else {
                 parent::process();
             }
@@ -271,9 +269,8 @@ class Product extends AbstractImporter
 
     protected function getChunkCommand($from, $to)
     {
-        return sprintf('php bin/console galilee:import -t product --from=%d --to=%d &' . PHP_EOL, $from, $to);
+        return sprintf('php bin/console galilee:import -t product --from=%d --to=%d &'.PHP_EOL, $from, $to);
     }
-
 
     protected function processChunks($totalLine)
     {
@@ -283,14 +280,14 @@ class Product extends AbstractImporter
         $chunkCount = ceil($totalLine / self::CHUNK);
         $p = 1;
         $cmd = '';
-        for ($i = 1; $i <= $chunkCount; $i++) {
+        for ($i = 1; $i <= $chunkCount; ++$i) {
             $cmd .= $this->getChunkCommand($from, $to);
-            if ($p == self::PARALLEL_IMPORT) {
+            if (self::PARALLEL_IMPORT == $p) {
                 $p = 0;
                 $commandLines[] = $cmd;
                 $cmd = '';
             }
-            $p++;
+            ++$p;
             $from = $to + 1;
             $to += self::CHUNK;
         }
@@ -301,21 +298,20 @@ class Product extends AbstractImporter
         foreach ($commandLines as $cmd) {
             $result = $this->runCmd($cmd);
         }
-
     }
 
     protected function runCmd($cmd)
     {
         $result = true;
-        $this->vMessage('RUN PROCESSES...' . $cmd);
+        $this->vMessage('RUN PROCESSES...'.$cmd);
         $process = new Process($cmd);
         $process->setTimeout(60 * 60 * 24 * 4);
 
         $process->run(function ($type, $buffer) {
             if (Process::ERR === $type) {
-                $this->vMessage('ERR > ' . $buffer);
+                $this->vMessage('ERR > '.$buffer);
             } else {
-                $this->vMessage('OUT > ' . $buffer);
+                $this->vMessage('OUT > '.$buffer);
             }
         });
 
@@ -329,7 +325,7 @@ class Product extends AbstractImporter
 
     /**
      * @param array $csvRow
-     * @param integer $csvLineNumber
+     * @param int   $csvLineNumber
      *
      * @return bool
      */
@@ -352,25 +348,23 @@ class Product extends AbstractImporter
             $this->isCategoriesProcessed = false;
             $processRow = true;
         }
+
         return $processRow;
     }
 
     /**
-     * If resetImages is true, we need to know it prior dealing with images
-     *
-     * @param array $csvRow
+     * If resetImages is true, we need to know it prior dealing with images.
      *
      * @return bool
      */
     protected function checkResetImages(array $csvRow)
     {
         $this->isResetImages = false;
-        if (isset($csvRow['reset_images']) && $csvRow['reset_images'] == 1) {
+        if (isset($csvRow['reset_images']) && 1 == $csvRow['reset_images']) {
             $this->isResetImages = true;
 
             // if field is empty, we won't get to be in MhRef fn, which handle the reset, so in this case only we delete all
             if (!$this->hasImagesToImport($csvRow)) {
-
                 $images = $this->inProcessObject->getImages();
                 if ($images) {
                     /** @var Image $image */
@@ -378,10 +372,10 @@ class Product extends AbstractImporter
                         try {
                             $fileName = $image->getFilename();
                             $image->delete();
-                            $this->vMessage('  - deleted : ' . $fileName . ' for ' . $this->inProcessObject->getFullPath());
+                            $this->vMessage('  - deleted : '.$fileName.' for '.$this->inProcessObject->getFullPath());
                         } catch (\Exception $e) {
                             $this->logWarning(self::WARN_PRODUCT_IMAGE_COULD_NOT_BE_DELETED,
-                                'Image: ' . $image->getFullPath(),
+                                'Image: '.$image->getFullPath(),
                                 $this->line
                             );
                         }
@@ -391,20 +385,22 @@ class Product extends AbstractImporter
                 }
             }
         }
+
         return true;
     }
-
 
     protected function checkZeroPrice($csvRow, $csvLineNumber)
     {
         if (Config::getWebsiteConfig()->get(self::PRICE_SETTING, false)) {
             $price = $csvRow[self::PRICE];
-            if ($price == 0) {
-                $this->countProductWithNoPrice++;
-                $this->logWarning(self::WARN_PRODUCT_ZERO_PRICE, 'SKU : ' . $csvRow['sku'], $csvLineNumber);
+            if (0 == $price) {
+                ++$this->countProductWithNoPrice;
+                $this->logWarning(self::WARN_PRODUCT_ZERO_PRICE, 'SKU : '.$csvRow['sku'], $csvLineNumber);
+
                 return false;
             }
         }
+
         return true;
     }
 
@@ -423,18 +419,18 @@ class Product extends AbstractImporter
         }
 
         if ($this->inProcessObject) {
-            $this->initObjectMessage = 'Produit : ' . $this->inProcessObject->getFullPath();
+            $this->initObjectMessage = 'Produit : '.$this->inProcessObject->getFullPath();
             $this->setParentProduct($csvRow);
             $this->inProcessObject->setOmitMandatoryCheck(true);
             $processRow = true;
         }
+
         return $processRow;
     }
 
-
     /**
-     * we skip inherited value to disable this feature on this field
-     * @param string $objectFieldName
+     * we skip inherited value to disable this feature on this field.
+     *
      * @param string $csvValue 0|1
      *
      * @return bool
@@ -442,23 +438,22 @@ class Product extends AbstractImporter
     protected function handleAvailability(
         string $objectFieldName = '',
         string $csvValue = ''
-    )
-    {
+    ) {
         $isUpdated = false;
-        $csvConvertedValue = $csvValue === '1';
-        $oldValue = $this->inProcessObject->getAvailability() === self::SELECT_TRUE;
+        $csvConvertedValue = '1' === $csvValue;
+        $oldValue = self::SELECT_TRUE === $this->inProcessObject->getAvailability();
         // Disable product if status_import_socoda = 1 (init) and wait_import_socoda = 1
-        if ($this->getMode() == self::CREATE_MODE) {
+        if (self::CREATE_MODE == $this->getMode()) {
             $statusImportSocoda = $this->csvRow['status_import_socoda'];
-            $waitImportSocoda = (bool)$this->csvRow['wait_import_socoda'];
+            $waitImportSocoda = (bool) $this->csvRow['wait_import_socoda'];
         } else {
             $statusImportSocoda = $this->inProcessObject->getStatusImportSocoda();
             $waitImportSocoda = $this->inProcessObject->getWaitImportSocoda();
         }
-        if ($statusImportSocoda == PimHelper::STATUS_IMPORT_SOCODA_INIT
-            && $waitImportSocoda !== false // null or true
+        if (PimHelper::STATUS_IMPORT_SOCODA_INIT == $statusImportSocoda
+            && false !== $waitImportSocoda // null or true
         ) {
-            if ($oldValue === true) {
+            if (true === $oldValue) {
                 $this->inProcessObject->setAvailability(self::SELECT_FALSE);
                 $isUpdated = true;
             }
@@ -466,9 +461,9 @@ class Product extends AbstractImporter
             $this->inProcessObject->setAvailability($csvConvertedValue ? self::SELECT_TRUE : self::SELECT_FALSE);
             $isUpdated = true;
         }
+
         return $isUpdated;
     }
-
 
     /**
      * @throws \Exception
@@ -477,6 +472,7 @@ class Product extends AbstractImporter
     {
         $this->countProductWithNoPrice = 0;
         $this->parentFolder = DataObject\Service::createFolderByPath(self::PARENT_FOLDER_KEY);
+
         return parent::preProcess();
     }
 
@@ -489,18 +485,17 @@ class Product extends AbstractImporter
         // Produit parent
         if (isset($row['parent']) && strlen($row['parent']) > 0) {
             $parent = ObjectHelper::getProductWithVariantBy('sku', $row['parent']);
-            if ($parent != null) {
+            if (null != $parent) {
                 $newParent = $parent;
                 $isVariant = true;
             }
         } // Famille
         elseif (isset($row['family']) && strlen($row['family']) > 0) {
             $family = DataObject\Family::getByFamilyCode(Tools::normalize($row['family']), 1);
-            if ($family != null) {
+            if (null != $family) {
                 $newParent = $family;
             }
         }
-
 
         if ($newParent->getId() != $previousParentId) {
             $this->inProcessObject->setParent($newParent);
@@ -509,14 +504,14 @@ class Product extends AbstractImporter
             }
             $this->setIsUpdated(true);
         }
+
         return true;
     }
 
     protected function setFamily(
         string $objectFieldName,
         string $csvValue
-    ): bool
-    {
+    ): bool {
         $updated = false;
         $defaultKey = BrickHelper::getBrickKeyFromAttributeSet(BrickHelper::DEFAULT);
         $familyCode = $csvValue;
@@ -525,17 +520,19 @@ class Product extends AbstractImporter
             return false;
         }
         $brickName = $family->getObjectBrickKey();
-        $brickClassName = '\\Pimcore\\Model\\DataObject\\Objectbrick\\Data\\' . ucfirst($brickName);
-        $brickGetter = 'get' . ucfirst($brickName);
-        $brickSetter = 'set' . ucfirst($brickName);
+        $brickClassName = '\\Pimcore\\Model\\DataObject\\Objectbrick\\Data\\'.ucfirst($brickName);
+        $brickGetter = 'get'.ucfirst($brickName);
+        $brickSetter = 'set'.ucfirst($brickName);
 
         if (!class_exists($brickClassName)) {
             $this->logWarning(self::WARN_PRODUCT_FAMILY_NOT_FOUND, $brickName, $this->line);
+
             return false;
         }
 
         if (!method_exists($this->inProcessObject->getAttributes(), $brickGetter)) {
             $this->logWarning(self::WARN_PRODUCT_FAMILY_NOT_VALID, $brickName, $this->line);
+
             return false;
         }
 
@@ -548,9 +545,9 @@ class Product extends AbstractImporter
 
         // add Default
         if ($objectBrick->getType() !== $defaultKey) {
-            $defaultBrickClassName = '\\Pimcore\\Model\\DataObject\\Objectbrick\\Data\\' . ucfirst($defaultKey);
-            $defaultBrickGetter = 'get' . ucfirst($defaultKey);
-            $defaultBrickSetter = 'set' . ucfirst($defaultKey);
+            $defaultBrickClassName = '\\Pimcore\\Model\\DataObject\\Objectbrick\\Data\\'.ucfirst($defaultKey);
+            $defaultBrickGetter = 'get'.ucfirst($defaultKey);
+            $defaultBrickSetter = 'set'.ucfirst($defaultKey);
             $defaultObjectBrick = $this->inProcessObject->getAttributes()->$defaultBrickGetter();
             if (!$defaultObjectBrick) {
                 $defaultObjectBrick = new $defaultBrickClassName($this->inProcessObject, 'attributes');
@@ -567,6 +564,7 @@ class Product extends AbstractImporter
                 $updated = true;
             }
         }
+
         return $updated;
     }
 
@@ -579,31 +577,31 @@ class Product extends AbstractImporter
         if (!$familyObject) {
             $this->logWarning(self::WARN_PRODUCT_FAMILY_NOT_FOUND, $familyCode, $this->line);
         }
+
         return $familyObject;
     }
 
     protected function handleAttributes(
         string $objectFieldName,
         string $csvValue
-    ): bool
-    {
+    ): bool {
         $updated = false;
 
         // CSV Attributes : CodeFamily:NameAttribut1:Valeur1|CodeFamily:NameAttribut1:Valeur2
-        $csvAttributes = array_filter(array_map('trim', explode("|", $csvValue)));
+        $csvAttributes = array_filter(array_map('trim', explode('|', $csvValue)));
         $bricksLoaded = [];
         foreach ($csvAttributes as $attributeString) {
             list($familyCode, $name, $value) = array_map('trim', explode(':', $attributeString));
             $brickKey = BrickHelper::getBrickKeyFromAttributeSet($familyCode);
-            $brickClassName = '\\Pimcore\\Model\\DataObject\\Objectbrick\\Data\\' . ucfirst($brickKey);
-            $brickGetter = 'get' . ucfirst($brickKey);
-            $brickSetter = 'set' . ucfirst($brickKey);
+            $brickClassName = '\\Pimcore\\Model\\DataObject\\Objectbrick\\Data\\'.ucfirst($brickKey);
+            $brickGetter = 'get'.ucfirst($brickKey);
+            $brickSetter = 'set'.ucfirst($brickKey);
             if (!isset($bricksLoaded[$brickKey])) {
                 $newObjectBrick = new $brickClassName($this->inProcessObject, 'attributes');
                 $newObjectBrick->setFieldname('attributes');
                 $bricksLoaded[$brickKey] = [
                     'brick' => $newObjectBrick,
-                    'setter' => $brickSetter
+                    'setter' => $brickSetter,
                 ];
             }
             $objectBrick = $this->inProcessObject->getAttributes()->$brickGetter();
@@ -616,11 +614,10 @@ class Product extends AbstractImporter
             if (is_null($result)) {
                 continue;
             }
-            $updated = $result === true ?: $updated;
-
+            $updated = true === $result ?: $updated;
         }
 
-        if ($updated === true) {
+        if (true === $updated) {
             foreach ($bricksLoaded as $brickLoaded) {
                 $this->inProcessObject
                     ->getAttributes()
@@ -645,34 +642,35 @@ class Product extends AbstractImporter
         $name,
         $value,
         $printLog = true
-    ): ?bool
-    {
-        if ($value == '') {
+    ): ?bool {
+        if ('' == $value) {
             return false;
         }
         $updated = false;
         $name = BrickHelper::getValidname($name);
-        $fieldSetter = 'set' . ucfirst($name);
-        $fieldGetter = 'get' . ucfirst($name);
+        $fieldSetter = 'set'.ucfirst($name);
+        $fieldGetter = 'get'.ucfirst($name);
 
         if (!method_exists($newObjectBrick, $fieldSetter)) {
             if ($printLog) {
                 $this->logWarning(
                     self::WARN_PRODUCT_ATTRIBUTE_NOT_FOUND,
-                    'Attribut : ' . $name . ' - Famille : ' . $newObjectBrick->getType(),
+                    'Attribut : '.$name.' - Famille : '.$newObjectBrick->getType(),
                     $this->line
                 );
             }
+
             return null;
         }
         if (!method_exists($objectBrick, $fieldGetter)) {
             if ($printLog) {
                 $this->logWarning(
                     self::WARN_PRODUCT_ATTRIBUTE_NOT_FOUND,
-                    'Attribut : ' . $name . ' - Famille : ' . $newObjectBrick->getType(),
+                    'Attribut : '.$name.' - Famille : '.$newObjectBrick->getType(),
                     $this->line
                 );
             }
+
             return null;
         }
 
@@ -688,25 +686,21 @@ class Product extends AbstractImporter
         return $updated;
     }
 
-
     /**
-     * @param string $objectFieldName
-     * @param string $csvValue
-     *
      * @return bool
+     *
      * @throws \Exception
      */
     protected function setSupplier(
         string $objectFieldName,
         string $csvValue
-    )
-    {
+    ) {
         $parentFolderKey = 'suppliers';
         $className = 'Supplier';
         $objectClassName = sprintf('\\Pimcore\\Model\\DataObject\\%s', ucfirst($className));
         $key = File::getValidFilename($csvValue);
-        $obj = $objectClassName::getByPath('/' . $parentFolderKey . '/' . $key);
-        if ($obj == null) {
+        $obj = $objectClassName::getByPath('/'.$parentFolderKey.'/'.$key);
+        if (null == $obj) {
             $folderObject = DataObject\Service::createFolderByPath($parentFolderKey);
             $obj = new $objectClassName();
             $obj->setName($csvValue);
@@ -716,9 +710,9 @@ class Product extends AbstractImporter
             $obj->save();
         }
 
-        return $this->objectsMetaData(
+        return $this->objectsMetadata(
             $objectFieldName,
-            '/' . $parentFolderKey . '/' . $key,
+            '/'.$parentFolderKey.'/'.$key,
             $className,
             'Path',
             self::FIELD_VALUE_SEPARATOR
@@ -726,23 +720,20 @@ class Product extends AbstractImporter
     }
 
     /**
-     * @param string $objectFieldName
-     * @param string $csvValue
-     *
      * @return bool
+     *
      * @throws \Exception
      */
     protected function setBrand(
         string $objectFieldName,
         string $csvValue
-    )
-    {
+    ) {
         $parentFolderKey = 'brands';
         $className = 'Brand';
         $objectClassName = sprintf('\\Pimcore\\Model\\DataObject\\%s', ucfirst($className));
         $key = File::getValidFilename($csvValue);
-        $obj = $objectClassName::getByPath('/' . $parentFolderKey . '/' . $key);
-        if ($obj == null) {
+        $obj = $objectClassName::getByPath('/'.$parentFolderKey.'/'.$key);
+        if (null == $obj) {
             $folderObject = DataObject\Service::createFolderByPath($parentFolderKey);
             $obj = new $objectClassName();
             $obj->setName($csvValue);
@@ -752,9 +743,9 @@ class Product extends AbstractImporter
             $obj->save();
         }
 
-        return $this->objectsMetaData(
+        return $this->objectsMetadata(
             $objectFieldName,
-            '/' . $parentFolderKey . '/' . $key,
+            '/'.$parentFolderKey.'/'.$key,
             $className,
             'Path',
             self::FIELD_VALUE_SEPARATOR
@@ -762,23 +753,20 @@ class Product extends AbstractImporter
     }
 
     /**
-     * @param string $objectFieldName
-     * @param string $csvValue
-     *
      * @return bool
+     *
      * @throws \Exception
      */
     protected function setQuantityPriceType(
         string $objectFieldName,
         string $csvValue
-    )
-    {
+    ) {
         $parentFolderKey = 'quantity price type';
         $className = 'QuantityPriceType';
         $objectClassName = sprintf('\\Pimcore\\Model\\DataObject\\%s', ucfirst($className));
         $key = File::getValidFilename($csvValue);
-        $obj = $objectClassName::getByPath('/' . $parentFolderKey . '/' . $key);
-        if ($obj == null) {
+        $obj = $objectClassName::getByPath('/'.$parentFolderKey.'/'.$key);
+        if (null == $obj) {
             $folderObject = DataObject\Service::createFolderByPath($parentFolderKey);
             $obj = new $objectClassName();
             $obj->setLabel($csvValue);
@@ -788,30 +776,27 @@ class Product extends AbstractImporter
             $obj->save();
         }
 
-        return $this->objectsMetaData(
+        return $this->objectsMetadata(
             $objectFieldName,
-            '/' . $parentFolderKey . '/' . $key,
+            '/'.$parentFolderKey.'/'.$key,
             $className,
             'Path',
             self::FIELD_VALUE_SEPARATOR
         );
     }
 
-    /**
-     * @param array $row
-     */
     protected function feedEmptyField(array $row)
     {
-        if ((!isset($row['wait_import_socoda']) || $row['wait_import_socoda'] == '')
-            && $this->inProcessObject->getWaitImportSocoda() == null) {
+        if ((!isset($row['wait_import_socoda']) || '' == $row['wait_import_socoda'])
+            && null == $this->inProcessObject->getWaitImportSocoda()) {
             $prev = $this->inProcessObject->getWaitImportSocoda();
-            if ($prev !== true) {
+            if (true !== $prev) {
                 $this->inProcessObject->setWaitImportSocoda(false);
                 $this->isUpdated(true);
             }
         }
 
-        if (!isset($row['status_import_socoda']) || $row['status_import_socoda'] == '') {
+        if (!isset($row['status_import_socoda']) || '' == $row['status_import_socoda']) {
             $updated = $this->handleStatusImportSocoda(
                 'status_import_socoda',
                 PimHelper::STATUS_IMPORT_SOCODA_NO_SYNC
@@ -821,10 +806,10 @@ class Product extends AbstractImporter
             }
         }
 
-        if ((!isset($row['category_import_socoda']) || $row['category_import_socoda'] == '')
-            && $this->inProcessObject->getCategoryImportSocoda() == null) {
+        if ((!isset($row['category_import_socoda']) || '' == $row['category_import_socoda'])
+            && null == $this->inProcessObject->getCategoryImportSocoda()) {
             $prev = $this->inProcessObject->getCategoryImportSocoda();
-            if ($prev !== true) {
+            if (true !== $prev) {
                 $this->inProcessObject->setCategoryImportSocoda(false);
                 $this->isUpdated(true);
             }
@@ -841,8 +826,8 @@ class Product extends AbstractImporter
             $this->setIsUpdated(true);
         }
 
-        if ((!isset($row['websites']) || $row['websites'] == '') && ($this->inProcessObject->getWebsites() == null || count($this->inProcessObject->getWebsites()) < 1)) {
-            if ((!isset($row['store_views'])) || $row['store_views'] == '' || $row['store_views'] == 'default') {
+        if ((!isset($row['websites']) || '' == $row['websites']) && (null == $this->inProcessObject->getWebsites() || count($this->inProcessObject->getWebsites()) < 1)) {
+            if ((!isset($row['store_views'])) || '' == $row['store_views'] || 'default' == $row['store_views']) {
                 /** @var DataObject\Website $baseWebsite */
                 $baseWebsite = DataObject\Website::getByCode('base', 1);
                 $relation = new DataObject\Data\ObjectMetadata('websites', [], $baseWebsite);
@@ -851,8 +836,8 @@ class Product extends AbstractImporter
             }
         }
 
-        if ((!isset($row['store_views']) || $row['store_views'] == '') && ($this->inProcessObject->getStoreViews() == null || count($this->inProcessObject->getStoreViews()) < 1)) {
-            if ((!isset($row['websites'])) || $row['websites'] == '' || $row['websites'] == 'base') {
+        if ((!isset($row['store_views']) || '' == $row['store_views']) && (null == $this->inProcessObject->getStoreViews() || count($this->inProcessObject->getStoreViews()) < 1)) {
+            if ((!isset($row['websites'])) || '' == $row['websites'] || 'base' == $row['websites']) {
                 /** @var DataObject\StoreView $defaultStoreView */
                 $defaultStoreView = DataObject\StoreView::getByCode('default', 1);
                 $relation = new DataObject\Data\ObjectMetadata('storeViews', [], $defaultStoreView);
@@ -880,8 +865,7 @@ class Product extends AbstractImporter
     protected function handleStatusImportSocoda(
         string $objectFieldName = '',
         string $csvValue = ''
-    )
-    {
+    ) {
         $updated = false;
         // @todo add check value status (1-4)
         $prev = $this->inProcessObject->getStatusImportSocoda();
@@ -890,43 +874,39 @@ class Product extends AbstractImporter
             $updated = true;
             $this->statusNotes[] = ['typeImport' => PimHelper::NOTE_TYPE_IMPORT_ADHERENT, 'status' => $csvValue];
         }
+
         return $updated;
     }
 
-
     /**
      * If value was true, we need to keep it as a resetImages must be done on magento
-     * only export and bo action can reset this value to false
-     *
-     * @param string $objectFieldName
-     * @param string $csvValue
+     * only export and bo action can reset this value to false.
      *
      * @return bool
      */
     protected function handleResetImages(
         string $objectFieldName = '',
         string $csvValue = ''
-    )
-    {
+    ) {
         $updated = false;
 
         $acceptedValues = ['0', '1'];
 
-        if (!in_array((string)$csvValue, $acceptedValues)) {
+        if (!in_array((string) $csvValue, $acceptedValues)) {
             $this->logWarning(self::WARN_PRODUCT_RESET_IMAGES_ATTRIBUTE_INVALID,
-                'valeur de la celulle : "' . $csvValue . '", valeurs acceptées : "pas de valeur", "0" ou "1"',
+                'valeur de la celulle : "'.$csvValue.'", valeurs acceptées : "pas de valeur", "0" ou "1"',
                 $this->line
             );
         }
 
         $prev = $this->inProcessObject->getResetImages();
-        if ($prev == false && $csvValue == 1) {
+        if (false == $prev && 1 == $csvValue) {
             $this->inProcessObject->setResetImages(true);
             $updated = true;
         }
+
         return $updated;
     }
-
 
     protected function postProcessRow()
     {
@@ -939,21 +919,19 @@ class Product extends AbstractImporter
             );
         }
         $this->statusNotes = [];
+
         return parent::postProcessRow();
     }
 
     /**
-     * @param string $objectFieldName
-     * @param string $csvValue
-     *
      * @return bool
+     *
      * @throws \Exception
      */
     protected function setCategories(
         string $objectFieldName,
         string $csvValue
-    )
-    {
+    ) {
         $updated = false;
         $prevCategories = $this->inProcessObject->getCategories() ?? [];
 
@@ -961,9 +939,9 @@ class Product extends AbstractImporter
             $resetCategory = $this->getResetCategory();
             /** @var DataObject\Category[] $categories */
             $categories = [];
-            if ($objectFieldName == 'categories') {
+            if ('categories' == $objectFieldName) {
                 $categories = $this->handleCategoriesByCode($csvValue);
-            } elseif ($objectFieldName == 'path_categories') {
+            } elseif ('path_categories' == $objectFieldName) {
                 $categories = $this->handleCategoriesByPath($csvValue);
             }
 
@@ -1001,17 +979,14 @@ class Product extends AbstractImporter
     }
 
     /**
-     * @param string $objectFieldName
-     * @param string $csvValue
-     *
      * @return bool
+     *
      * @throws \Exception
      */
     protected function setWebsites(
         string $objectFieldName,
         string $csvValue
-    )
-    {
+    ) {
         $className = 'Website';
         /** @var DataObject\Website $objectClassName */
         $objectClassName = sprintf('\\Pimcore\\Model\\DataObject\\%s', ucfirst($className));
@@ -1021,22 +996,22 @@ class Product extends AbstractImporter
         foreach ($websites as $key => $website) {
             /** @var DataObject\Website $obj */
             $obj = $objectClassName::getByCode($website, 1);
-            if ($obj == null) {
+            if (null == $obj) {
                 $this->logWarning(self::WARN_PRODUCT_WEBSITE_NOT_FOUND,
-                    'Code: ' . $website,
+                    'Code: '.$website,
                     $this->line
                 );
                 unset($websites[$key]);
             }
-            if ($obj != null) {
-                if ($this->csvRow['websites'] == 'base' && $this->csvRow['store_views'] == '') {
+            if (null != $obj) {
+                if ('base' == $this->csvRow['websites'] && '' == $this->csvRow['store_views']) {
                     $this->csvRow['store_views'] = 'default';
                 }
                 $find = false;
                 foreach (explode(self::FIELD_VALUE_SEPARATOR, $this->csvRow['store_views']) as $storeViewCode) {
                     /** @var DataObject\StoreView $storeView */
                     $storeView = DataObject\StoreView::getByCode($storeViewCode, 1);
-                    if ($storeView != null) {
+                    if (null != $storeView) {
                         if (count($storeView->getWebsite()) > 0) {
                             /** @var DataObject\Data\ObjectMetadata $relation */
                             $relation = $storeView->getWebsite()[0];
@@ -1050,7 +1025,7 @@ class Product extends AbstractImporter
                 }
                 if (!$find) {
                     $this->logWarning(self::WARN_PRODUCT_WEBSITE_NO_STOREVIEW_SET,
-                        'Code: ' . $website,
+                        'Code: '.$website,
                         $this->line
                     );
                     unset($websites[$key]);
@@ -1060,7 +1035,7 @@ class Product extends AbstractImporter
 
         $csvValue = implode(self::FIELD_VALUE_SEPARATOR, $websites);
 
-        return self::objectsMetaData(
+        return self::objectsMetadata(
             $objectFieldName,
             $csvValue,
             $className,
@@ -1070,17 +1045,14 @@ class Product extends AbstractImporter
     }
 
     /**
-     * @param string $objectFieldName
-     * @param string $csvValue
-     *
      * @return bool
+     *
      * @throws \Exception
      */
     protected function setStoreViews(
         string $objectFieldName,
         string $csvValue
-    )
-    {
+    ) {
         $className = 'StoreView';
         /** @var DataObject\StoreView $objectClassName */
         $objectClassName = sprintf('\\Pimcore\\Model\\DataObject\\%s', ucfirst($className));
@@ -1090,15 +1062,15 @@ class Product extends AbstractImporter
         foreach ($storeViews as $key => $storeView) {
             /** @var DataObject\StoreView $obj */
             $obj = $objectClassName::getByCode($storeView, 1);
-            if ($obj == null) {
+            if (null == $obj) {
                 $this->logWarning(self::WARN_PRODUCT_STOREVIEW_NOT_FOUND,
-                    'Code: ' . $storeView,
+                    'Code: '.$storeView,
                     $this->line
                 );
                 unset($storeViews[$key]);
             }
-            if ($obj != null) {
-                if ($this->csvRow['store_views'] == 'default' && $this->csvRow['websites'] == '') {
+            if (null != $obj) {
+                if ('default' == $this->csvRow['store_views'] && '' == $this->csvRow['websites']) {
                     $this->csvRow['websites'] = 'base';
                 }
                 $find = false;
@@ -1111,7 +1083,7 @@ class Product extends AbstractImporter
                     foreach (explode(self::FIELD_VALUE_SEPARATOR, $this->csvRow['websites']) as $websiteCode) {
                         /** @var DataObject\Website $website */
                         $website = DataObject\Website::getByCode($websiteCode, 1);
-                        if ($website != null) {
+                        if (null != $website) {
                             $websitesList[] = $website->getCode();
                             if ($website->getCode() == $storeViewWebsite->getCode()) {
                                 $find = true;
@@ -1121,7 +1093,7 @@ class Product extends AbstractImporter
                 }
                 if (!$find) {
                     $this->logWarning(self::WARN_PRODUCT_STOREVIEW_NOT_FOUND_IN_WEBSITE,
-                        'StoreView: ' . $storeView . ' Website(s): ' . implode(', ', $websitesList),
+                        'StoreView: '.$storeView.' Website(s): '.implode(', ', $websitesList),
                         $this->line
                     );
                     unset($storeViews[$key]);
@@ -1131,7 +1103,7 @@ class Product extends AbstractImporter
 
         $csvValue = implode(self::FIELD_VALUE_SEPARATOR, $storeViews);
 
-        return self::objectsMetaData(
+        return self::objectsMetadata(
             $objectFieldName,
             $csvValue,
             $className,
@@ -1149,9 +1121,10 @@ class Product extends AbstractImporter
     protected function getResetCategory()
     {
         $resetCategory = false;
-        if (isset($this->csvRow['reset_category']) && (bool)$this->csvRow['reset_category']) {
+        if (isset($this->csvRow['reset_category']) && (bool) $this->csvRow['reset_category']) {
             $resetCategory = true;
         }
+
         return $resetCategory;
     }
 
@@ -1183,12 +1156,13 @@ class Product extends AbstractImporter
                 }
                 if (!$found) {
                     $this->logWarning(self::WARN_PRODUCT_CATEGORY_NAME_NOT_FOUND_IN_PARENT,
-                        'Catégorie : ' . $categoryName . ' - Parent : ' . $parentCategory->getFullPath(),
+                        'Catégorie : '.$categoryName.' - Parent : '.$parentCategory->getFullPath(),
                         $this->line
                     );
                 }
             }
         }
+
         return $categories;
     }
 
@@ -1207,12 +1181,11 @@ class Product extends AbstractImporter
         if (count($categories) > 0) {
             $this->isCategoriesProcessed = true;
         }
+
         return $categories;
     }
 
     /**
-     * @param array $csvRow
-     *
      * @return bool
      */
     protected function checkEiffage(array $csvRow)
@@ -1222,32 +1195,35 @@ class Product extends AbstractImporter
                 'Si au moins un des champs new_item_unit et new_item_ext_category_id est renseigné alors les 2 champs doivent l\'être.',
                 $this->line
             );
+
             return false;
         }
         if ((isset($csvRow['new_item_unit']) && !empty($csvRow['new_item_unit'])) && (isset($csvRow['new_item_ext_category_id']) && !empty($csvRow['new_item_ext_category_id']))) {
             $newItemUnitParentFolderKey = 'unité de vente EIFFAGE';
             $newItemUnitClassName = 'NewItemUnit';
             $newItemUnitObjectClassName = sprintf('\\Pimcore\\Model\\DataObject\\%s', ucfirst($newItemUnitClassName));
-            $newItemUnit = $newItemUnitObjectClassName::getByPath('/' . $newItemUnitParentFolderKey . '/' . $csvRow['new_item_unit']);
+            $newItemUnit = $newItemUnitObjectClassName::getByPath('/'.$newItemUnitParentFolderKey.'/'.$csvRow['new_item_unit']);
 
             $newItemExtCategoryIdParentFolderKey = 'catégories EIFFAGE';
             $newItemExtCategoryIdClassName = 'NewItemExtCategoryId';
             $newItemExtCategoryIdObjectClassName = sprintf('\\Pimcore\\Model\\DataObject\\%s',
                 ucfirst($newItemExtCategoryIdClassName));
-            $newItemExtCategoryId = $newItemExtCategoryIdObjectClassName::getByPath('/' . $newItemExtCategoryIdParentFolderKey . '/' . $csvRow['new_item_ext_category_id']);
+            $newItemExtCategoryId = $newItemExtCategoryIdObjectClassName::getByPath('/'.$newItemExtCategoryIdParentFolderKey.'/'.$csvRow['new_item_ext_category_id']);
 
             if (!$newItemUnit) {
                 $this->logWarning(self::WARN_PRODUCT_EIFFAGE_ATTRIBUTE_NEWITEMUNIT_NOT_FOUND,
-                    $csvRow['new_item_unit'] . ' (' . $newItemUnitClassName . ')',
+                    $csvRow['new_item_unit'].' ('.$newItemUnitClassName.')',
                     $this->line
                 );
+
                 return false;
             }
             if (!$newItemExtCategoryId) {
                 $this->logWarning(self::WARN_PRODUCT_EIFFAGE_ATTRIBUTE_NEWITEMEXTCATEGORYID_NOT_FOUND,
-                    $csvRow['new_item_ext_category_id'] . ' (' . $newItemExtCategoryIdClassName . ')',
+                    $csvRow['new_item_ext_category_id'].' ('.$newItemExtCategoryIdClassName.')',
                     $this->line
                 );
+
                 return false;
             }
         }
@@ -1257,22 +1233,22 @@ class Product extends AbstractImporter
             $packagingUnitClassName = 'PackagingUnit';
             $packagingUnitObjectClassName = sprintf('\\Pimcore\\Model\\DataObject\\%s',
                 ucfirst($packagingUnitClassName));
-            $packagingUnit = $packagingUnitObjectClassName::getByPath('/' . $packagingUnitParentFolderKey . '/' . $csvRow['packaging_unit']);
+            $packagingUnit = $packagingUnitObjectClassName::getByPath('/'.$packagingUnitParentFolderKey.'/'.$csvRow['packaging_unit']);
 
             if (!$packagingUnit) {
                 $this->logWarning(self::WARN_PRODUCT_EIFFAGE_ATTRIBUTE_PACKAGINGUNIT_NOT_FOUND,
-                    $csvRow['packaging_unit'] . ' (' . $packagingUnitClassName . ')',
+                    $csvRow['packaging_unit'].' ('.$packagingUnitClassName.')',
                     $this->line
                 );
+
                 return false;
             }
         }
+
         return true;
     }
 
     /**
-     * @param array $csvRow
-     *
      * @return bool
      */
     protected function checkWebsites(array $csvRow)
@@ -1282,29 +1258,28 @@ class Product extends AbstractImporter
                 'Si au moins un des champs websites et store_views est renseigné alors les 2 champs sont obligatoires.',
                 $this->line
             );
+
             return false;
         }
+
         return true;
     }
 
     /**
-     * @param string $objectFieldName
-     * @param string $csvValue
-     *
      * @return bool
+     *
      * @throws \Exception
      */
     protected function setNewItemUnit(
         string $objectFieldName,
         string $csvValue
-    )
-    {
+    ) {
         $parentFolderKey = 'unité de vente EIFFAGE';
         $className = 'NewItemUnit';
         $objectClassName = sprintf('\\Pimcore\\Model\\DataObject\\%s', ucfirst($className));
-        $obj = $objectClassName::getByPath('/' . $parentFolderKey . '/' . $csvValue);
+        $obj = $objectClassName::getByPath('/'.$parentFolderKey.'/'.$csvValue);
 
-        return $this->objectsMetaData(
+        return $this->objectsMetadata(
             $objectFieldName,
             $csvValue,
             $className,
@@ -1314,23 +1289,20 @@ class Product extends AbstractImporter
     }
 
     /**
-     * @param string $objectFieldName
-     * @param string $csvValue
-     *
      * @return bool
+     *
      * @throws \Exception
      */
     protected function setNewItemExtCategoryId(
         string $objectFieldName,
         string $csvValue
-    )
-    {
+    ) {
         $parentFolderKey = 'catégories EIFFAGE';
         $className = 'NewItemExtCategoryId';
         $objectClassName = sprintf('\\Pimcore\\Model\\DataObject\\%s', ucfirst($className));
-        $obj = $objectClassName::getByPath('/' . $parentFolderKey . '/' . $csvValue);
+        $obj = $objectClassName::getByPath('/'.$parentFolderKey.'/'.$csvValue);
 
-        return $this->objectsMetaData(
+        return $this->objectsMetadata(
             $objectFieldName,
             $csvValue,
             $className,
@@ -1340,52 +1312,50 @@ class Product extends AbstractImporter
     }
 
     /**
-     * @param string $objectFieldName
-     * @param string $csvValue
-     *
      * @return bool
+     *
      * @throws \Exception
      */
     protected function setSpecialFromDate(
         string $objectFieldName,
         string $csvValue
-    )
-    {
+    ) {
         if (isset($csvValue) && is_string($csvValue)) {
             $csvValue = strtotime($csvValue);
             $carbon = new Carbon();
             $this->inProcessObject->setSpecialFromDate($carbon->setTimestamp($csvValue));
+
             return true;
         }
+
         return false;
     }
 
     /**
-     * @param string $objectFieldName
-     * @param string $csvValue
-     *
      * @return bool
+     *
      * @throws \Exception
      */
     protected function setSpecialToDate(
         string $objectFieldName,
         string $csvValue
-    )
-    {
+    ) {
         if (isset($csvValue) && is_string($csvValue)) {
             $csvValue = strtotime($csvValue);
             $carbon = new Carbon();
             $this->inProcessObject->setSpecialToDate($carbon->setTimestamp($csvValue));
+
             return true;
         }
+
         return false;
     }
 
     protected function checkSpecialFromDate($csvRow)
     {
-        $format = "Y-m-d";
+        $format = 'Y-m-d';
         $csvValue = $csvRow['special_from_date'];
-        if (!isset($csvValue) || $csvValue == '' || (isset($csvValue) && is_string($csvValue) && date($format,
+        if (!isset($csvValue) || '' == $csvValue || (isset($csvValue) && is_string($csvValue) && date($format,
                     strtotime($csvValue)) == date($csvValue))) {
             return true;
         } else {
@@ -1393,15 +1363,16 @@ class Product extends AbstractImporter
                 $csvValue,
                 $this->line
             );
+
             return false;
         }
     }
 
     protected function checkSpecialToDate($csvRow)
     {
-        $format = "Y-m-d";
+        $format = 'Y-m-d';
         $csvValue = $csvRow['special_to_date'];
-        if (!isset($csvValue) || $csvValue == '' || (isset($csvValue) && is_string($csvValue) && date($format,
+        if (!isset($csvValue) || '' == $csvValue || (isset($csvValue) && is_string($csvValue) && date($format,
                     strtotime($csvValue)) == date($csvValue))) {
             return true;
         } else {
@@ -1409,6 +1380,7 @@ class Product extends AbstractImporter
                 $csvValue,
                 $this->line
             );
+
             return false;
         }
     }
@@ -1416,8 +1388,8 @@ class Product extends AbstractImporter
     protected function checkIdSocodaIsUnique($csvRow)
     {
         $attrCode = 'id_socoda';
-        if ($csvRow[$attrCode] !== "" && isset($csvRow[$attrCode])) {
-            if ($this->socodaIds === null) {
+        if ('' !== $csvRow[$attrCode] && isset($csvRow[$attrCode])) {
+            if (null === $this->socodaIds) {
                 $db = \Pimcore\Db::get();
                 $sql = sprintf('SELECT sku, idSocoda FROM object_%s WHERE idSocoda IS NOT NULL AND idSocoda != ""',
                     DataObject\Product::classId());
@@ -1441,17 +1413,20 @@ class Product extends AbstractImporter
                     'La valeur de l\'attribut "id_socoda" n\'est pas unique. Rentrez une valeur unique et réessayez.',
                     $this->line
                 );
+
                 return false;
             }
             $this->uniqueAttributes[$attrCode][$csvRow[$attrCode]] = $csvRow['sku'];
+
             return true;
         }
+
         return true;
     }
 
     protected function checkParentAttributeSet($csvRow)
     {
-        if (isset($csvRow['parent']) && $csvRow['parent'] !== "") {
+        if (isset($csvRow['parent']) && '' !== $csvRow['parent']) {
             $parent = ObjectHelper::getProductWithVariantBy('sku', $csvRow['parent']);
             if ($parent) {
                 /** @var DataObject\Objectbrick $item */
@@ -1465,6 +1440,7 @@ class Product extends AbstractImporter
                     'La famille (jeu d\'attribut) du produit enfant ne correspond pas à celle du produit parent.',
                     $this->line
                 );
+
                 return false;
             }
         }
@@ -1473,7 +1449,7 @@ class Product extends AbstractImporter
     }
 
     /**
-     * To override if needed
+     * To override if needed.
      *
      * @param $objectFieldName
      *
@@ -1489,13 +1465,12 @@ class Product extends AbstractImporter
             default:
                 break;
         }
+
         return $return;
     }
 
     /**
-     * if no image to import, in case of reset_images we need to delete old ones
-     *
-     * @param array $csvRow
+     * if no image to import, in case of reset_images we need to delete old ones.
      *
      * @return bool
      */
@@ -1505,23 +1480,20 @@ class Product extends AbstractImporter
     }
 
     /**
-     * @param string $objectFieldName
-     * @param string $csvValue
-     *
      * @return bool
+     *
      * @throws \Exception
      */
     protected function setPackagingUnit(
         string $objectFieldName,
         string $csvValue
-    )
-    {
+    ) {
         $parentFolderKey = 'unité de conditionnement';
         $className = 'PackagingUnit';
         $objectClassName = sprintf('\\Pimcore\\Model\\DataObject\\%s', ucfirst($className));
-        $obj = $objectClassName::getByPath('/' . $parentFolderKey . '/' . $csvValue);
+        $obj = $objectClassName::getByPath('/'.$parentFolderKey.'/'.$csvValue);
 
-        return $this->objectsMetaData(
+        return $this->objectsMetadata(
             $objectFieldName,
             $csvValue,
             $className,
@@ -1532,29 +1504,26 @@ class Product extends AbstractImporter
 
     /**
      * force as bool to prevent default null on checkbox from pimcore
-     * we skip inherited value to disable this feature on this field
-     * @param string $objectFieldName
-     * @param string $csvValue
+     * we skip inherited value to disable this feature on this field.
+     *
      * @return bool
      */
     protected function handlePcre(
         string $objectFieldName,
         string $csvValue
-    )
-    {
-        $pcre=null;
+    ) {
+        $pcre = null;
 
-        if($csvValue === '1'){
+        if ('1' === $csvValue) {
             $pcre = self::SELECT_TRUE;
-        } else if ($csvValue === '0') {
+        } elseif ('0' === $csvValue) {
             $pcre = self::SELECT_FALSE;
         }
 
-        if(!is_null($pcre)) {
+        if (!is_null($pcre)) {
             $this->inProcessObject->setPcre($pcre);
         }
 
         return true;
     }
-
 }

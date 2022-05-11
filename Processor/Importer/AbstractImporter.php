@@ -1043,7 +1043,7 @@ abstract class AbstractImporter extends AbstractProcessor implements ImporterInt
      * @return bool
      * @throws \Exception
      */
-    public function objectsMetaData(
+    public function objectsMetadata(
         string $objectFieldName,
         string $csvValue,
         string $className,

@@ -237,7 +237,7 @@ class Document extends AbstractImporter
 
         $csvValue = implode(self::FIELD_VALUE_SEPARATOR, $websites);
 
-        return self::objectsMetaData(
+        return self::objectsMetadata(
             $objectFieldName,
             $csvValue,
             $className,
