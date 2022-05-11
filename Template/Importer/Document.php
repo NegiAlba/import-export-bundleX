@@ -13,22 +13,21 @@ use Symfony\Component\Filesystem\Exception\FileNotFoundException;
 
 class Document extends AbstractImporter
 {
+    public const FIELD_VALUE_SEPARATOR = ',';
 
-    const FIELD_VALUE_SEPARATOR = ',';
+    public const CHUNK = 500;
 
-    const CHUNK = 500;
+    public const PARENT_FOLDER_KEY = 'documents';
 
-    const PARENT_FOLDER_KEY = 'documents';
+    public const DOCUMENTS_FILE_PATH = 'import/document';
 
-    const DOCUMENTS_FILE_PATH = 'import/document';
+    public const DOCUMENT_FOLDER = 'assets';
 
-    const DOCUMENT_FOLDER = 'assets';
-
-    const WARN_DOCUMENT_PRODUCT_NOT_FOUND = 'WARN_DOCUMENT_PRODUCT_NOT_FOUND';
-    const WARN_DOCUMENT_WEBSITE_NOT_FOUND = 'WARN_DOCUMENT_WEBSITE_NOT_FOUND';
+    public const WARN_DOCUMENT_PRODUCT_NOT_FOUND = 'WARN_DOCUMENT_PRODUCT_NOT_FOUND';
+    public const WARN_DOCUMENT_WEBSITE_NOT_FOUND = 'WARN_DOCUMENT_WEBSITE_NOT_FOUND';
     protected $warningMessages = [
         self::WARN_DOCUMENT_PRODUCT_NOT_FOUND => 'Produit non trouvé',
-        self::WARN_DOCUMENT_WEBSITE_NOT_FOUND => 'Website non trouvé'
+        self::WARN_DOCUMENT_WEBSITE_NOT_FOUND => 'Website non trouvé',
     ];
 
     /**
@@ -40,7 +39,7 @@ class Document extends AbstractImporter
      * @var array
      */
     public $mandatoryFields = [
-        'filepath'
+        'filepath',
     ];
 
     /**
@@ -54,7 +53,7 @@ class Document extends AbstractImporter
     public $mapping = [
         'filepath' => [
             'filepath',
-            'setFilePath'
+            'setFilePath',
         ],
         'label' => 'label',
         'visible' => 'visible',
@@ -62,12 +61,12 @@ class Document extends AbstractImporter
         'position' => 'position',
         'skus' => [
             'skus',
-            'setProducts'
+            'setProducts',
         ],
         'websites' => [
             'websites',
-            'setWebsites'
-        ]
+            'setWebsites',
+        ],
     ];
 
     public $loggerComponent = 'Import des Documents';
@@ -77,14 +76,13 @@ class Document extends AbstractImporter
      */
     protected $documentsPath;
 
-
     /**
      * Document constructor.
      */
     public function __construct()
     {
         parent::__construct();
-        $this->documentsPath = PIMCORE_ASSET_DIRECTORY . DIRECTORY_SEPARATOR . self::DOCUMENTS_FILE_PATH;
+        $this->documentsPath = self::DOCUMENTS_FILE_PATH;
     }
 
     /**
@@ -99,7 +97,7 @@ class Document extends AbstractImporter
 
         $parent = $this->parentFolder;
 
-        $this->inProcessObject = DataObject\Document::getByPath(DIRECTORY_SEPARATOR . $parent . DIRECTORY_SEPARATOR . $key);
+        $this->inProcessObject = DataObject\Document::getByPath(DIRECTORY_SEPARATOR.$parent.DIRECTORY_SEPARATOR.$key);
 
         if (!$this->inProcessObject) {
             $this->inProcessObject = new DataObject\Document();
@@ -115,6 +113,7 @@ class Document extends AbstractImporter
             $this->inProcessObject->setFile($asset);
         } catch (\Exception $exception) {
             $this->writeError($exception->getMessage());
+
             return false;
         }
 
@@ -123,7 +122,7 @@ class Document extends AbstractImporter
         $this->inProcessObject->setOmitMandatoryCheck(true);
         $this->inProcessObject->save();
         $this->inProcessObject->setOmitMandatoryCheck(false);
-        $this->initObjectMessage = 'Document : ' . $this->inProcessObject->getFullPath();
+        $this->initObjectMessage = 'Document : '.$this->inProcessObject->getFullPath();
 
         return true;
     }
@@ -134,16 +133,14 @@ class Document extends AbstractImporter
     public function preProcess()
     {
         $this->parentFolder = DataObject\Service::createFolderByPath(self::PARENT_FOLDER_KEY);
-        $parent = Asset\Service::createFolderByPath(DIRECTORY_SEPARATOR . self::DOCUMENTS_FILE_PATH,
+        $parent = Asset\Service::createFolderByPath(DIRECTORY_SEPARATOR.self::DOCUMENTS_FILE_PATH,
             ['locked' => true]);
         $this->unZip();
+
         return parent::preProcess();
     }
 
     /**
-     * @param string $objectFieldName
-     * @param string $csvValue
-     *
      * @return bool
      */
     protected function setFilePath(
@@ -157,17 +154,14 @@ class Document extends AbstractImporter
     }
 
     /**
-     * @param string $objectFieldName
-     * @param string $csvValue
-     *
      * @return bool
+     *
      * @throws \Exception
      */
     protected function setProducts(
         string $objectFieldName,
         string $csvValue
     ) {
-
         $skus = explode(self::FIELD_VALUE_SEPARATOR, $csvValue);
 
         foreach ($skus as $sku) {
@@ -187,7 +181,7 @@ class Document extends AbstractImporter
                 $product->setDocuments($documentsMetaData);
                 $product->save();
             } else {
-                $this->logWarning(self::WARN_DOCUMENT_PRODUCT_NOT_FOUND, 'SKU : ' . $sku, $this->line);
+                $this->logWarning(self::WARN_DOCUMENT_PRODUCT_NOT_FOUND, 'SKU : '.$sku, $this->line);
             }
         }
         // @todo return false if no value change.
@@ -195,10 +189,8 @@ class Document extends AbstractImporter
     }
 
     /**
-     * @param string $objectFieldName
-     * @param string $csvValue
-     *
      * @return bool
+     *
      * @throws \Exception
      */
     protected function setWebsites(
@@ -213,10 +205,10 @@ class Document extends AbstractImporter
 
         foreach ($websites as $key => $website) {
             $key = File::getValidFilename($website);
-            $obj = $objectClassName::getByPath('/' . $parentFolderKey . '/' . $key);
-            if ($obj == null) {
+            $obj = $objectClassName::getByPath('/'.$parentFolderKey.'/'.$key);
+            if (null == $obj) {
                 $this->logWarning(self::WARN_DOCUMENT_WEBSITE_NOT_FOUND,
-                    'Code: ' . $website,
+                    'Code: '.$website,
                     $this->line
                 );
                 unset($websites[$key]);
@@ -247,26 +239,24 @@ class Document extends AbstractImporter
     }
 
     /**
-     * @param string $filename
-     *
      * @return Asset
+     *
      * @throws \Exception
      */
     protected function moveFileDocument(string $filename)
     {
         $key = Service::getValidKey(trim($filename), 'asset');
-        $importPath = $this->getImportBasePath() . DIRECTORY_SEPARATOR . self::DOCUMENT_FOLDER;
-        $filepath = $importPath . DIRECTORY_SEPARATOR . $filename;
+        $importPath = $this->getImportBasePath().DIRECTORY_SEPARATOR.self::DOCUMENT_FOLDER;
+        $filepath = $importPath.DIRECTORY_SEPARATOR.$filename;
         if (!file_exists($filepath)) {
-            if (!$asset = Asset::getByPath(DIRECTORY_SEPARATOR . self::DOCUMENTS_FILE_PATH . DIRECTORY_SEPARATOR . $key)) {
-                throw new FileNotFoundException(sprintf('Le fichier "%s" est introuvable dans "%s".', $filename,
-                    self::DOCUMENT_FOLDER . DIRECTORY_SEPARATOR));
+            if (!$asset = Asset::getByPath(DIRECTORY_SEPARATOR.self::DOCUMENTS_FILE_PATH.DIRECTORY_SEPARATOR.$key)) {
+                throw new FileNotFoundException(sprintf('Le fichier "%s" est introuvable dans "%s".', $filename, self::DOCUMENT_FOLDER.DIRECTORY_SEPARATOR));
             } else {
                 return $asset;
             }
         }
 
-        if ($asset = Asset::getByPath(DIRECTORY_SEPARATOR . self::DOCUMENTS_FILE_PATH . DIRECTORY_SEPARATOR . $key)) {
+        if ($asset = Asset::getByPath(DIRECTORY_SEPARATOR.self::DOCUMENTS_FILE_PATH.DIRECTORY_SEPARATOR.$key)) {
             $asset->delete();
         }
 
@@ -282,17 +272,18 @@ class Document extends AbstractImporter
      */
     protected function unZip()
     {
-        $csvFile = FileHelper::getCurrentTimeStampedFile($this->importBasePath, $this->getType() . '.csv');
+        $csvFile = FileHelper::getCurrentTimeStampedFile($this->importBasePath, $this->getType().'.csv');
         $zipFile = FileHelper::getCurrentTimeStampedZipAssetFile($this->getType(), $csvFile);
         if (!file_exists($zipFile)) {
             return false;
         }
 
         $archive = new \ZipArchive();
-        if ($archive->open($zipFile) === true) {
-            $archive->extractTo($this->getImportBasePath() . DIRECTORY_SEPARATOR . self::DOCUMENT_FOLDER);
+        if (true === $archive->open($zipFile)) {
+            $archive->extractTo($this->getImportBasePath().DIRECTORY_SEPARATOR.self::DOCUMENT_FOLDER);
             $archive->close();
             unlink($zipFile);
+
             return true;
         }
 
@@ -300,27 +291,25 @@ class Document extends AbstractImporter
     }
 
     /**
-     * @param array $row
-     *
      * @throws \Exception
      */
     protected function feedEmptyField(array $row)
     {
-        if ((!isset($row['label']) || $row['label'] == '') && $this->inProcessObject->getLabel() == null) {
+        if ((!isset($row['label']) || '' == $row['label']) && null == $this->inProcessObject->getLabel()) {
             $filepath = $row['filepath'];
             $filename = pathinfo($filepath, PATHINFO_FILENAME);
             $this->inProcessObject->setLabel($filename);
         }
-        if ((!isset($row['visible']) || $row['visible'] == '') && $this->inProcessObject->getVisible() == null) {
+        if ((!isset($row['visible']) || '' == $row['visible']) && null == $this->inProcessObject->getVisible()) {
             $this->inProcessObject->setVisible(true);
         }
-        if ((!isset($row['visible_disconnected']) || $row['visible_disconnected'] == '') && $this->inProcessObject->getVisibleDisconnected() == null) {
+        if ((!isset($row['visible_disconnected']) || '' == $row['visible_disconnected']) && null == $this->inProcessObject->getVisibleDisconnected()) {
             $this->inProcessObject->setVisibleDisconnected(false);
         }
-        if ((!isset($row['position']) || $row['position'] == '') && $this->inProcessObject->getPosition() == null) {
+        if ((!isset($row['position']) || '' == $row['position']) && null == $this->inProcessObject->getPosition()) {
             $this->inProcessObject->setPosition('');
         }
-        if ((!isset($row['websites']) || $row['websites'] == '') && ($this->inProcessObject->getWebsites() == null || count($this->inProcessObject->getWebsites()) < 1)) {
+        if ((!isset($row['websites']) || '' == $row['websites']) && (null == $this->inProcessObject->getWebsites() || count($this->inProcessObject->getWebsites()) < 1)) {
             $this->setWebsites('websites', 'base');
         }
     }

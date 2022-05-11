@@ -1,6 +1,5 @@
 <?php
 /**
- *
  * @author Géraud ISSERTES <gissertes@galilee.fr>
  * @copyright © 2017 Galilée (www.galilee.fr)
  */
@@ -13,7 +12,6 @@ use Galilee\ImportExportBundle\Helper\AssetHelper;
 use Galilee\ImportExportBundle\Helper\DbHelper;
 use Pimcore\Db;
 use Pimcore\Model\DataObject;
-
 
 class ProductAsset extends AbstractExporter
 {
@@ -28,14 +26,13 @@ class ProductAsset extends AbstractExporter
 
     public $loggerComponent = 'Export des assets produits';
 
-
     /**
      * @throws Exception
      */
     public function process()
     {
         $t1 = microtime(true);
-        $this->writeInfo('Export des assets des produits modifiés après le : ' . $this->exportDate);
+        $this->writeInfo('Export des assets des produits modifiés après le : '.$this->exportDate);
 
         $this->exportImagesPath = $this->exportPath;
         if (!is_dir($this->exportImagesPath)) {
@@ -52,12 +49,10 @@ class ProductAsset extends AbstractExporter
             $this->postProcessProduct($product, $productDbHelper);
         }
 
-        $this->vMessage(printf("%f secondes", microtime(true) - $t1));
+        $this->vMessage(printf('%f secondes', microtime(true) - $t1));
     }
 
     /**
-     * @param array $product
-     *
      * @throws DBALException
      */
     protected function copyProductAssets(array $product)
@@ -77,20 +72,20 @@ class ProductAsset extends AbstractExporter
         foreach ($assets as $asset) {
             if ($asset) {
                 list($type, $id) = explode('|', $asset);
-                if ($type != 'folder' && $id) {
+                if ('folder' != $type && $id) {
                     $sql = $this->getQueryAsset($id, $isResetImages);
                     $result = $this->db->fetchAssoc($sql);
 
                     if (AssetHelper::PreviewExist($id, $result['path'], $result['filename'], AssetHelper::MAGENTO_THUMB_PREVIEW_PROFILE_NAME)) {
                         $fileSystemPath = AssetHelper::getPreviewFileSystemPath($id, $result['path'], $result['filename'], AssetHelper::MAGENTO_THUMB_PREVIEW_PROFILE_NAME);
                     } else {
-                        $fileSystemPath = PIMCORE_ASSET_DIRECTORY . $result['fullPath'];
+                        $fileSystemPath = $result['fullPath'];
                     }
                     if (isset($result['filename'])) {
-                        $to = $this->exportImagesPath . AssetHelper::getCleanFilename(basename($fileSystemPath));
+                        $to = $this->exportImagesPath.AssetHelper::getCleanFilename(basename($fileSystemPath));
                         if (!file_exists($to) && @copy($fileSystemPath, $to)) {
-                            $this->vMessage('Copy ' . $fileSystemPath . ' TO ' . $to);
-                            $this->filesCount++;
+                            $this->vMessage('Copy '.$fileSystemPath.' TO '.$to);
+                            ++$this->filesCount;
                         }
                     }
                 }
@@ -101,15 +96,15 @@ class ProductAsset extends AbstractExporter
     protected function createZip()
     {
         if ($this->filesCount) {
-            $this->writeInfo('Nombre d\'assets exportés : ' . $this->filesCount);
+            $this->writeInfo('Nombre d\'assets exportés : '.$this->filesCount);
             $zip = new \ZipArchive();
-            $filename = $this->exportPath . $this->exportFileName;
+            $filename = $this->exportPath.$this->exportFileName;
             if ($zip->open($filename, \ZipArchive::CREATE)) {
-                $options = array('add_path' => 'images/', 'remove_all_path' => true);
-                $zip->addGlob($this->exportImagesPath . '*', GLOB_BRACE, $options);
+                $options = ['add_path' => 'images/', 'remove_all_path' => true];
+                $zip->addGlob($this->exportImagesPath.'*', GLOB_BRACE, $options);
                 $zip->close();
             }
-            $this->writeInfo('Création de l\'archive ' . $this->exportPath . $this->exportFileName);
+            $this->writeInfo('Création de l\'archive '.$this->exportPath.$this->exportFileName);
             recursiveDelete($this->exportImagesPath);
         }
     }
@@ -122,33 +117,32 @@ class ProductAsset extends AbstractExporter
         $exportDate = strtotime($this->exportDate);
         $productTable = sprintf('object_%d', DataObject\Product::classId());
         $sql = sprintf(
-            'SELECT' .
-            ' oo_id,' .
-            ' resetImages,' .
-            ' images' .
-            ' FROM %s' .
+            'SELECT'.
+            ' oo_id,'.
+            ' resetImages,'.
+            ' images'.
+            ' FROM %s'.
             ' WHERE o_modificationDate >= %d ',
             $productTable, $exportDate);
+
         return $sql;
     }
 
     /**
      * @param $id
-     * @param bool | null $isResetImages
+     * @param bool|null $isResetImages
      *
      * @return string
      */
     protected function getQueryAsset($id, $isResetImages)
     {
-
         $sql = sprintf(
-            'SELECT' .
-            ' filename,' .
-            ' path,' .
-            ' CONCAT(path, filename) AS fullPath' .
-            ' FROM assets' .
-            ' WHERE id = %d AND type <> \'folder\' '
-            , $id);
+            'SELECT'.
+            ' filename,'.
+            ' path,'.
+            ' CONCAT(path, filename) AS fullPath'.
+            ' FROM assets'.
+            ' WHERE id = %d AND type <> \'folder\' ', $id);
 
         // if no reset image  (NULL || 0), only export new ones
         if (!$isResetImages) {
@@ -156,13 +150,13 @@ class ProductAsset extends AbstractExporter
             // no o_ on this one
             $sql .= sprintf('AND modificationDate >= %d', $exportDate);
         }
-        $this->vvMessage($sql . PHP_EOL);
+        $this->vvMessage($sql.PHP_EOL);
+
         return $sql;
     }
 
     /**
      * @param $product
-     * @param DbHelper $productDbHelper
      */
     protected function postProcessProduct($product, DbHelper $productDbHelper)
     {
@@ -170,6 +164,4 @@ class ProductAsset extends AbstractExporter
             $productDbHelper->update($product['oo_id'], ['resetImages' => 0], false);
         }
     }
-
-
 }
