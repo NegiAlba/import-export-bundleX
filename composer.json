@@ -1,5 +1,5 @@
 {
-  "name": "socoda-pimcore/import-export-bundleX",
+  "name": "negialba/import-export-bundlex",
   "type": "pimcore-bundle",
   "description": "Import Export Plugin for Pimcore X",
   "require": {
