@@ -1,0 +1,4 @@
+galilee_import_export:
+    resource: "@GalileeImportExportBundle/Controller/"
+    type:     annotation
+    prefix:   /

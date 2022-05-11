@@ -1,0 +1,10 @@
+#!/bin/bash
+
+echo "Delete products images"
+while [ -z "$PRODUCTS_LEFT" ] || [ "$PRODUCTS_LEFT" -gt 0 ];
+do
+OUTPUT="$(php bin/console socoda:catalog:delete_product_images ${PRODUCTS_LEFT:+-o $PRODUCTS_LEFT} -l 1000 | tail -1)"
+PRODUCTS_LEFT=${OUTPUT}
+echo $PRODUCTS_LEFT
+done
+echo "Finished"

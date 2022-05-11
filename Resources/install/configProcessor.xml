@@ -1,0 +1,105 @@
+<?xml version="1.0"?>
+<zend-config xmlns:zf="http://framework.zend.com/xml/zend-config-xml/1.0/">
+    <importers>
+        <importer>
+            <type>family</type>
+            <class>Galilee\ImportExportBundle\Template\Importer\Family</class>
+            <update authorized="*"/>
+        </importer>
+        <importer>
+            <type>family-pim-auto</type>
+            <baseFileName>family</baseFileName>
+            <csvSeparator>,</csvSeparator>
+            <folder>FtpPath-pim/automatiques/familles</folder>
+            <class>Galilee\ImportExportBundle\Template\Importer\Family</class>
+            <update authorized="*"/>
+        </importer>
+        <importer>
+            <type>family-pim-dem</type>
+            <baseFileName>family</baseFileName>
+            <csvSeparator>,</csvSeparator>
+            <folder>FtpPath-pim/demandes/familles</folder>
+            <class>Galilee\ImportExportBundle\Template\Importer\Family</class>
+            <update authorized="*"/>
+        </importer>
+        <importer>
+            <type>category</type>
+            <class>Galilee\ImportExportBundle\Template\Importer\Category</class>
+            <update authorized="*"/>
+        </importer>
+        <importer>
+            <type>category-pim-auto</type>
+            <baseFileName>category</baseFileName>
+            <csvSeparator>,</csvSeparator>
+            <folder>FtpPath-pim/automatiques/categories</folder>
+            <class>Galilee\ImportExportBundle\Template\Importer\CategoryPim</class>
+            <update authorized="*"/>
+        </importer>
+        <importer>
+            <type>category-pim-dem</type>
+            <baseFileName>category</baseFileName>
+            <csvSeparator>,</csvSeparator>
+            <folder>FtpPath-pim/demandes/categories</folder>
+            <class>Galilee\ImportExportBundle\Template\Importer\CategoryPim</class>
+            <update authorized="*"/>
+        </importer>
+        <importer>
+            <type>product</type>
+            <class>Galilee\ImportExportBundle\Template\Importer\Product</class>
+            <update authorized="*"/>
+        </importer>
+        <importer>
+            <type>product-pim-auto</type>
+            <baseFileName>product</baseFileName>
+            <csvSeparator>,</csvSeparator>
+            <class>Galilee\ImportExportBundle\Template\Importer\ProductPim</class>
+            <folder>FtpPath-pim/automatiques/produits</folder>
+            <update authorized="*"/>
+        </importer>
+        <importer>
+            <type>product-pim-dem</type>
+            <baseFileName>product</baseFileName>
+            <csvSeparator>,</csvSeparator>
+            <class>Galilee\ImportExportBundle\Template\Importer\ProductPim</class>
+            <folder>FtpPath-pim/demandes/produits</folder>
+            <update authorized="*"/>
+        </importer>
+        <importer>
+            <type>document</type>
+            <class>Galilee\ImportExportBundle\Template\Importer\Document</class>
+            <update authorized="*"/>
+        </importer>
+    </importers>
+    <exporters>
+        <exporter>
+            <type>categories</type>
+            <class>Galilee\ImportExportBundle\Template\Exporter\Category</class>
+            <export-sub-folder>category</export-sub-folder>
+        </exporter>
+        <exporter>
+            <type>categories-asset</type>
+            <class>Galilee\ImportExportBundle\Template\Exporter\CategoryAsset</class>
+            <export-sub-folder>category/images</export-sub-folder>
+        </exporter>
+        <exporter>
+            <type>product</type>
+            <class>Galilee\ImportExportBundle\Template\Exporter\Product</class>
+            <export-sub-folder>product</export-sub-folder>
+        </exporter>
+        <exporter>
+            <type>product-asset</type>
+            <class>Galilee\ImportExportBundle\Template\Exporter\ProductAsset</class>
+            <export-sub-folder>product/images</export-sub-folder>
+        </exporter>
+        <exporter>
+            <type>family</type>
+            <class>Galilee\ImportExportBundle\Template\Exporter\Family</class>
+            <export-sub-folder>attribute</export-sub-folder>
+        </exporter>
+        <exporter>
+            <type>document</type>
+            <class>Galilee\ImportExportBundle\Template\Exporter\Document</class>
+            <export-sub-folder>product/document</export-sub-folder>
+        </exporter>
+    </exporters>
+</zend-config>

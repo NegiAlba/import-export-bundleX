@@ -1,0 +1,8 @@
+pimcore_admin:
+    dataObjects:
+        notes_events:
+            types:
+                - ""
+                - "Action manuelle"
+                - "Import Adhérent"
+                - "Import Pim Socoda"
