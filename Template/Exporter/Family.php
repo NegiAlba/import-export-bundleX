@@ -110,7 +110,6 @@ class Family extends AbstractExporter
                 foreach ($defaultData as $defaultAttribute) {
                     $exists = false;
                     for ($i = 0; $i < count($currentData) && !$exists; ++$i) {
-                        var_dump($currentData[$i]);
                         if (array_key_exists('attribute_code', $currentData[$i])) {
                             if ($currentData[$i]['attribute_code'] == $defaultAttribute['attribute_code']) {
                                 $exists = true;
