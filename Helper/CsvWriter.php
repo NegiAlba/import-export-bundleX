@@ -1,15 +1,11 @@
 <?php
 
-
 namespace Galilee\ImportExportBundle\Helper;
-
 
 class CsvWriter
 {
-
     public $file;
     public $separator = ',';
-
 
     public function __construct($fullPath)
     {
@@ -33,9 +29,8 @@ class CsvWriter
         $this->file = null;
     }
 
-    function __destruct()
+    public function __destruct()
     {
         $this->close();
     }
-
 }

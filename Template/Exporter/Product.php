@@ -1,6 +1,5 @@
 <?php
 /**
- *
  * @author Géraud ISSERTES <gissertes@galilee.fr>
  * @copyright © 2017 Galilée (www.galilee.fr)
  */
@@ -21,7 +20,6 @@ use Pimcore\Model\WebsiteSetting;
 
 class Product extends BaseProductExporter
 {
-
     /** @var DataObject\Product */
     public $inProgressProduct;
 
@@ -39,12 +37,13 @@ class Product extends BaseProductExporter
     public function __construct()
     {
         $this->initColumnNames();
+
         return parent::__construct();
     }
 
     public function preProcess()
     {
-        $this->exportFileName = date("Y-m-d-H-i-s") . '_' . $this->exportFileName;
+        $this->exportFileName = date('Y-m-d-H-i-s').'_'.$this->exportFileName;
     }
 
     protected function getQuery()
@@ -52,11 +51,12 @@ class Product extends BaseProductExporter
         $exportDate = strtotime($this->exportDate);
         $productTable = sprintf('object_%d', DataObject\Product::classId());
         $sql = sprintf(
-            'SELECT' .
-            ' *' .
-            ' FROM %s' .
+            'SELECT'.
+            ' *'.
+            ' FROM %s'.
             ' WHERE o_modificationDate >= %d ',
             $productTable, $exportDate);
+
         return $sql;
     }
 
@@ -65,41 +65,39 @@ class Product extends BaseProductExporter
      */
     public function process()
     {
-        $this->writeInfo('Export des produits modifiés après le : ' . $this->exportDate);
+        $this->writeInfo('Export des produits modifiés après le : '.$this->exportDate);
 
         $this->productDbHelper = new DbHelper(DataObject\Product::class, 'Product');
 
         $db = Db::get();
         $sql = $this->getQuery();
-        $productsArray = $db->fetchAll($sql);
+        $productsArray = $db->fetchAllAssociative($sql);
         $totalCount = count($productsArray);
-        $this->writeInfo('Nombre de produit(s) : ' . $totalCount);
+        $this->writeInfo('Nombre de produit(s) : '.$totalCount);
 
         if ($totalCount) {
-
             $timeBatchStart = microtime(true);
 
-            $csvWriter = new CsvWriter($this->exportPath . $this->exportFileName);
+            $csvWriter = new CsvWriter($this->exportPath.$this->exportFileName);
             $csvWriter->addRow($this->columnNames);
 
             $count = 1;
             foreach ($productsArray as $productArray) {
-
                 $timeRowStart = microtime(true);
 
                 $product = DataObject\Product::getById($productArray['oo_id']);
                 if ($product) {
-                    $this->vMessage($count . '/' . $totalCount . ' > ' . $product->getSku());
+                    $this->vMessage($count.'/'.$totalCount.' > '.$product->getSku());
                     $this->inProgressProduct = $product;
                     if (self::canExport($product)) {
                         $storeViewRelations = $product->getStoreViews();
                         $websiteRelations = $product->getWebsites();
-                        if ($storeViewRelations != null || $websiteRelations != null) {
+                        if (null != $storeViewRelations || null != $websiteRelations) {
                             /** @var ObjectMetadata $storeViewRelation */
                             foreach ($storeViewRelations as $storeViewRelation) {
                                 /** @var DataObject\StoreView $storeView */
                                 $storeView = $storeViewRelation->getObject();
-                                if (count($storeView->getWebsite()) == 1) {
+                                if (1 == count($storeView->getWebsite())) {
                                     /** @var ObjectMetadata $websiteRelation */
                                     $websiteRelation = $storeView->getWebsite()[0];
                                     /** @var DataObject\Website $website */
@@ -112,40 +110,35 @@ class Product extends BaseProductExporter
                             }
 
                             $this->postProcessRow();
-
                         } else {
-                            if ($websiteRelations == null) {
-                                $this->writeWarning('Pas de Website attribué pour le produit: ' . $product->getSku());
+                            if (null == $websiteRelations) {
+                                $this->writeWarning('Pas de Website attribué pour le produit: '.$product->getSku());
                             }
-                            if ($storeViewRelations == null) {
-                                $this->writeWarning('Pas de Store View attribué pour le produit: ' . $product->getSku());
+                            if (null == $storeViewRelations) {
+                                $this->writeWarning('Pas de Store View attribué pour le produit: '.$product->getSku());
                             }
                         }
                     }
-                    $count++;
+                    ++$count;
                     $timeRowEnd = microtime(true);
-                    $this->vMessage(' - Row treated in ' . ($timeRowEnd - $timeRowStart) . ' sec : ' . $product->getFullPath());
+                    $this->vMessage(' - Row treated in '.($timeRowEnd - $timeRowStart).' sec : '.$product->getFullPath());
                 } else {
-                    $this->vMessage('Error load product ' . $productArray['oo_id']);
+                    $this->vMessage('Error load product '.$productArray['oo_id']);
                     $timeRowEnd = microtime(true);
-                    $this->vMessage(' - Row treated in ' . ($timeRowEnd - $timeRowStart) . ' sec');
+                    $this->vMessage(' - Row treated in '.($timeRowEnd - $timeRowStart).' sec');
                 }
-
             }
 
             $timeBatchEnd = microtime(true);
-            $this->vMessage('Product Collection exported in ' . ($timeBatchEnd - $timeBatchStart) . ' sec');
+            $this->vMessage('Product Collection exported in '.($timeBatchEnd - $timeBatchStart).' sec');
 
             $csvWriter->close();
-            $this->writeInfo('Fichier d\'export  : ' . $this->exportPath . $this->exportFileName);
-
+            $this->writeInfo('Fichier d\'export  : '.$this->exportPath.$this->exportFileName);
         }
     }
 
     /**
      * @param $product
-     *
-     * @return array
      */
     public function getRowWebsite(
         DataObject\Product $product,
@@ -170,40 +163,40 @@ class Product extends BaseProductExporter
 
         $associatedProducts = '';
         $associated_product = '';
-        if ($type == self::PRODUCT_TYPE_SIMPLE) {
+        if (self::PRODUCT_TYPE_SIMPLE == $type) {
             $associated_product = $this->getAssociatedProduct();
         }
 
         $up_selling = '';
-        if ($type == self::PRODUCT_TYPE_SIMPLE) {
+        if (self::PRODUCT_TYPE_SIMPLE == $type) {
             $up_selling = $this->getUpSelling();
         }
 
         $cross_selling = '';
-        if ($type == self::PRODUCT_TYPE_SIMPLE) {
+        if (self::PRODUCT_TYPE_SIMPLE == $type) {
             $cross_selling = $this->getCrossSelling();
         }
 
-        //Because pimcore getter is bugged with checkboxes
-        $isInStock = ($this->inProgressProduct->inStock === null)
-            ? $this->inProgressProduct->getInStock() : $this->inProgressProduct->inStock;
-        $isInStock = ($isInStock === true) ? '1' : '0';
+        // Because pimcore getter is bugged with checkboxes
+        // $isInStock = ($this->inProgressProduct->inStock === null)
+        //     ? $this->inProgressProduct->getInStock() : $this->inProgressProduct->inStock;
+        $isInStock = (true === $this->inProgressProduct->getInStock()) ? '1' : '0';
 
-        $availability = ($this->inProgressProduct->availability === null)
-            ? $this->inProgressProduct->getAvailability() : $this->inProgressProduct->availability;
-        $availability = ($availability === '1') ? '1' : '0';
+        // $availability = ($this->inProgressProduct->availability === null)
+        //     ? $this->inProgressProduct->getAvailability() : $this->inProgressProduct->availability;
+        $availability = ('1' === $this->inProgressProduct->getAvailability()) ? '1' : '0';
 
         // URL_KEY
         if ($this->inProgressProduct->getUrlKey()) {
             $urlKey = $this->inProgressProduct->getUrlKey();
         } else {
-            $urlKey = $this->inProgressProduct->getParent()->getKey() . '-' . $this->inProgressProduct->getKey();
-            if ($type == self::PRODUCT_TYPE_GROUPED) {
+            $urlKey = $this->inProgressProduct->getParent()->getKey().'-'.$this->inProgressProduct->getKey();
+            if (self::PRODUCT_TYPE_GROUPED == $type) {
                 $urlKey .= '_grouped';
             }
         }
 
-        if ($type == self::PRODUCT_TYPE_GROUPED) {
+        if (self::PRODUCT_TYPE_GROUPED == $type) {
             $sku .= '-grouped';
             $associatedProducts = $this->getAssociatedSkus();
             $isInStock = '1';
@@ -211,50 +204,66 @@ class Product extends BaseProductExporter
 
         $manufacturer = '';
         $manufacturerObjects = $this->inProgressProduct->getSupplier();
-        /** @var ObjectMetadata $manufacturerObject */
-        $manufacturerObject = $manufacturerObjects[0];
-        if ($manufacturerObject) {
-            $manufacturer = $manufacturerObject->getObject()->getName();
+        /* @var ObjectMetadata $manufacturerObject */
+        if (count($manufacturerObjects) > 0) {
+            $manufacturerObject = $manufacturerObjects[0];
+            if ($manufacturerObject) {
+                $manufacturer = $manufacturerObject->getObject()->getLabel();
+            }
         }
+        // $manufacturerObject = $manufacturerObjects[0];
+        // if ($manufacturerObject) {
+        //     $manufacturer = $manufacturerObject->getObject()->getName();
+        // }
 
         $brandName = '';
         $brandNameObjects = $this->inProgressProduct->getBrand();
-        /** @var ObjectMetadata $brandNameObject */
-        $brandNameObject = $brandNameObjects[0];
-        if ($brandNameObject) {
-            $brandName = $brandNameObject->getObject()->getName();
+        /* @var ObjectMetadata $brandNameObject */
+        if (count($brandNameObjects) > 0) {
+            $brandNameObject = $brandNameObjects[0];
+            if ($brandNameObject) {
+                $brandName = $brandNameObject->getObject()->getName();
+            }
         }
 
         $quantityPriceType = '';
         $quantityPriceTypeObjects = $this->inProgressProduct->getQuantityPriceType();
-        /** @var ObjectMetadata $quantityPriceTypeObject */
-        $quantityPriceTypeObject = $quantityPriceTypeObjects[0];
-        if ($quantityPriceTypeObject) {
-            $quantityPriceType = $quantityPriceTypeObject->getObject()->getLabel();
+        /* @var ObjectMetadata $quantityPriceTypeObject */
+        if (count($quantityPriceTypeObjects) > 0) {
+            $quantityPriceTypeObject = $quantityPriceTypeObjects[0];
+            if ($quantityPriceTypeObject) {
+                $quantityPriceType = $quantityPriceTypeObject->getObject()->getLabel();
+            }
         }
 
         $newItemUnit = '';
         $newItemUnitObjects = $this->inProgressProduct->getNewItemUnit();
-        /** @var ObjectMetadata $newItemUnitObject */
-        $newItemUnitObject = $newItemUnitObjects[0];
-        if ($newItemUnitObject) {
-            $newItemUnit = $newItemUnitObject->getObject()->getLabel();
+        /* @var ObjectMetadata $newItemUnitObject */
+        if (count($newItemUnitObjects) > 0) {
+            $newItemUnitObject = $newItemUnitObjects[0];
+            if ($newItemUnitObject) {
+                $newItemUnit = $newItemUnitObject->getObject()->getLabel();
+            }
         }
 
         $newItemExtCategoryId = '';
         $newItemExtCategoryIdObjects = $this->inProgressProduct->getNewItemExtCategoryId();
-        /** @var ObjectMetadata $newItemExtCategoryIdObject */
-        $newItemExtCategoryIdObject = $newItemExtCategoryIdObjects[0];
-        if ($newItemExtCategoryIdObject) {
-            $newItemExtCategoryId = $newItemExtCategoryIdObject->getObject()->getLabel();
+        /* @var ObjectMetadata $newItemExtCategoryIdObject */
+        if (count($newItemExtCategoryIdObjects) > 0) {
+            $newItemExtCategoryIdObject = $newItemExtCategoryIdObjects[0];
+            if ($newItemExtCategoryIdObject) {
+                $newItemExtCategoryId = $newItemExtCategoryIdObject->getObject()->getLabel();
+            }
         }
 
         $packagingUnit = '';
         $packagingUnitObjects = $this->inProgressProduct->getPackagingUnit();
-        /** @var ObjectMetadata $packagingUnitObject */
-        $packagingUnitObject = $packagingUnitObjects[0];
-        if ($packagingUnitObject) {
-            $packagingUnit = $packagingUnitObject->getObject()->getLabel();
+        /* @var ObjectMetadata $packagingUnitObject */
+        if (count($packagingUnitObjects) > 0) {
+            $packagingUnitObject = $packagingUnitObjects[0];
+            if ($packagingUnitObject) {
+                $packagingUnit = $packagingUnitObject->getObject()->getLabel();
+            }
         }
 
         $conditioning = $this->getConditioning();
@@ -295,7 +304,7 @@ class Product extends BaseProductExporter
         $row['qty_increments'] = $conditioning['conditioning'];
         $row['id_socoda'] = $this->inProgressProduct->getIdSocoda();
         $row['wait_import_socoda'] = $this->inProgressProduct->getWaitImportSocoda();
-        $row['status_import_socoda'] = (int)$this->inProgressProduct->getStatusImportSocoda() != 0 ? (int)$this->inProgressProduct->getStatusImportSocoda() : 4;
+        $row['status_import_socoda'] = 0 != (int) $this->inProgressProduct->getStatusImportSocoda() ? (int) $this->inProgressProduct->getStatusImportSocoda() : 4;
         $row['category_import_socoda'] = $this->inProgressProduct->getCategoryImportSocoda();
         $row['special_price'] = $this->inProgressProduct->getSpecialPrice();
         $row['special_from_date'] = ($this->inProgressProduct->getSpecialFromDate() instanceof Carbon ? $this->inProgressProduct->getSpecialFromDate()->format('Y-m-d') : '');
@@ -312,7 +321,7 @@ class Product extends BaseProductExporter
 
         $row['number_pieces_packaging'] = $this->inProgressProduct->getNumberPiecesPackaging();
         $row['packaging_unit'] = $packagingUnit;
-        $row['pcre'] = $this->inProgressProduct->getPcre() === '1' ? 1 : 0;
+        $row['pcre'] = '1' === $this->inProgressProduct->getPcre() ? 1 : 0;
 
         $bricks = $this->inProgressProduct->getAttributes()->getItems();
         foreach ($bricks as $brick) {
@@ -333,11 +342,11 @@ class Product extends BaseProductExporter
     protected function addAttributeDataRow($brick, $row)
     {
         $definition = $brick->getDefinition();
-        if ($definition->getTitle() != 'Default') {
+        if ('Default' != $definition->getTitle()) {
             $row['attribute_set_code'] = $definition->getTitle();
         }
         foreach ($definition->getFieldDefinitions() as $attrName => $attrObj) {
-            $getter = 'get' . ucfirst($attrName);
+            $getter = 'get'.ucfirst($attrName);
             if (method_exists($brick, $getter)) {
                 switch ($attrObj->getFieldtype()) {
                     case 'multiselect':
@@ -351,9 +360,9 @@ class Product extends BaseProductExporter
 
                     case 'checkbox':
                         $value = '';
-                        if ($brick->$getter() == 1) {
+                        if (1 == $brick->$getter()) {
                             $value = 'Yes';
-                        } elseif ($brick->$getter() == 0) {
+                        } elseif (0 == $brick->$getter()) {
                             $value = 'No';
                         }
                         break;
@@ -367,6 +376,7 @@ class Product extends BaseProductExporter
                 }
             }
         }
+
         return $row;
     }
 
@@ -383,40 +393,41 @@ class Product extends BaseProductExporter
                 $categoryParent = $categoryParent->getParent();
             }
             if (count($tree)) {
-                $productCategory = implode('/', array_reverse($tree)) . '/' . $category->getName();
+                $productCategory = implode('/', array_reverse($tree)).'/'.$category->getName();
             } else {
                 $productCategory = $category->getName();
             }
-            $productCategories[] = self::DEFAULT_CATEGORY . '/' . $productCategory;
+            $productCategories[] = self::DEFAULT_CATEGORY.'/'.$productCategory;
         }
+
         return implode(self::DEFAULT_EXPORT_MULTI_VALUE_SEPARATOR, $productCategories);
     }
 
     protected function getProductVariable($type, $objectName, $objectField)
     {
         $results = [];
-        $objGetter = 'get' . ucfirst($objectName);
-        $fieldGetter = 'get' . ucfirst($objectField);
+        $objGetter = 'get'.ucfirst($objectName);
+        $fieldGetter = 'get'.ucfirst($objectField);
         if ($this->inProgressProduct->$objGetter()) {
             foreach ($this->inProgressProduct->$objGetter() as $obj) {
-                if ($type == 'metadata') {
+                if ('metadata' == $type) {
                     $results[] = $obj->getObject()->$fieldGetter();
                 }
-                if ($type == 'object') {
+                if ('object' == $type) {
                     $results[] = $obj->$fieldGetter();
                 }
             }
         }
+
         return $results;
     }
 
-
     protected function getAssociatedSkus()
     {
-        $associatedProductsWithPosition = array();
-        $associatedProductsNoPosition = array();
-        $associatedSkusWithPosition = array();
-        $associatedSkusNoPosition = array();
+        $associatedProductsWithPosition = [];
+        $associatedProductsNoPosition = [];
+        $associatedSkusWithPosition = [];
+        $associatedSkusNoPosition = [];
         foreach ($this->inProgressProduct->getChildren(self::OBJECT_TYPES) as $child) {
             if ($child instanceof DataObject\Product) {
                 if (!is_null($child->getPosition())) {
@@ -434,11 +445,11 @@ class Product extends BaseProductExporter
         $associatedSkus = $this->inProgressProduct->getSku();
 
         foreach ($associatedSkusWithPosition as $child) {
-            $associatedSkus .= $this->getDefaultMultiValueSeparator() . $child->getSku();
+            $associatedSkus .= $this->getDefaultMultiValueSeparator().$child->getSku();
         }
 
         foreach ($associatedSkusNoPosition as $child) {
-            $associatedSkus .= $this->getDefaultMultiValueSeparator() . $child->getSku();
+            $associatedSkus .= $this->getDefaultMultiValueSeparator().$child->getSku();
         }
 
         return $associatedSkus;
@@ -455,7 +466,7 @@ class Product extends BaseProductExporter
                     $associated_product .= $child->getSku();
                     $first = false;
                 } else {
-                    $associated_product .= $this->getDefaultMultiValueSeparator() . $child->getSku();
+                    $associated_product .= $this->getDefaultMultiValueSeparator().$child->getSku();
                 }
             }
         }
@@ -473,7 +484,7 @@ class Product extends BaseProductExporter
                     $up_selling .= $child->getSku();
                     $first = false;
                 } else {
-                    $up_selling .= $this->getDefaultMultiValueSeparator() . $child->getSku();
+                    $up_selling .= $this->getDefaultMultiValueSeparator().$child->getSku();
                 }
             }
         }
@@ -491,7 +502,7 @@ class Product extends BaseProductExporter
                     $cross_selling .= $child->getSku();
                     $first = false;
                 } else {
-                    $cross_selling .= $this->getDefaultMultiValueSeparator() . $child->getSku();
+                    $cross_selling .= $this->getDefaultMultiValueSeparator().$child->getSku();
                 }
             }
         }
@@ -499,22 +510,19 @@ class Product extends BaseProductExporter
         return $cross_selling;
     }
 
-
     /**
-     * Insert the product into the array at the given position
+     * Insert the product into the array at the given position.
      *
-     * @param array $array
-     * @param int $position
      * @param $product
      *
      * @return array
      */
     protected function insertIntoPosition(array $array, int $position, $product)
     {
-        if ($position === -1) {
+        if (-1 === $position) {
             array_push($array, $product);
         } else {
-            if ($position === 0) {
+            if (0 === $position) {
                 array_unshift($array, $product);
             } else {
                 array_splice($array, $position, 0, [$product]);
@@ -528,9 +536,6 @@ class Product extends BaseProductExporter
      * Find the position to insert the product in the given array.
      * Based on the names of the products to sort alphabetically.
      *
-     * @param array $associatedSkus
-     * @param DataObject\Product $child
-     *
      * @return int
      */
     protected function findPositionInArrayWithNames(array $associatedSkus, DataObject\Product $child)
@@ -539,7 +544,7 @@ class Product extends BaseProductExporter
             $i = count($associatedSkus);
             $position = -1;
             while ($i > 0) {
-                $i--;
+                --$i;
                 $currentChild = $associatedSkus[$i];
 
                 if ($currentChild->getName() > $child->getName()) {
@@ -548,6 +553,7 @@ class Product extends BaseProductExporter
                 }
                 break;
             }
+
             return $position;
         } else {
             return -1;
@@ -556,10 +562,7 @@ class Product extends BaseProductExporter
 
     /**
      * Find the position in the given array where the associated product should be inserted.
-     * Based on the attribute "position" first, and products with the same position are sorted alphabetically
-     *
-     * @param array $associatedSkus
-     * @param DataObject\Product $child
+     * Based on the attribute "position" first, and products with the same position are sorted alphabetically.
      *
      * @return int
      */
@@ -569,7 +572,7 @@ class Product extends BaseProductExporter
             $i = count($associatedSkus);
             $position = -1;
             while ($i > 0) {
-                $i--;
+                --$i;
                 $currentChild = $associatedSkus[$i];
 
                 if ($currentChild->getPosition() > $child->getPosition()) {
@@ -585,6 +588,7 @@ class Product extends BaseProductExporter
                 }
                 break;
             }
+
             return $position;
         } else {
             return -1;
@@ -598,6 +602,7 @@ class Product extends BaseProductExporter
         if (!$this->isMonoStore()) {
             $this->columnNames = array_unique(array_merge($this->columnNames, ['store_view_code']));
         }
+
         return $this;
     }
 
@@ -611,19 +616,19 @@ class Product extends BaseProductExporter
                 $attributes[] = File::getValidFilename($fieldDefinition->getName());
             }
         }
+
         return array_unique($attributes);
     }
-
 
     protected function getProductImages()
     {
         $exportDate = strtotime($this->exportDate);
-        $result = array(
+        $result = [
             'base' => '',
             'thumbnail' => '',
             'small' => '',
-            'additional' => ''
-        );
+            'additional' => '',
+        ];
         $images = $this->inProgressProduct->getImages();
         if ($images) {
             /** @var \Pimcore\Model\Asset\Image $image */
@@ -631,50 +636,48 @@ class Product extends BaseProductExporter
             $additionalImages = [];
             $baseImages = $thumbnailImage = $smallImage = '';
             foreach ($images as $image) {
-
                 // unless reset_images was set, we only send those not yet exported to magento
                 if (!$this->inProgressProduct->getResetImages() && $image->getModificationDate() < $exportDate) {
-                    $i++;
+                    ++$i;
                     continue;
                 }
                 try {
-
                     if (AssetHelper::IsPreviewNeeded($image)) {
                         $timeThumbGenerationStart = microtime(true);
                         $imageUrl = AssetHelper::getThumbnailUrl($image,
                             AssetHelper::MAGENTO_THUMB_PREVIEW_PROFILE_NAME);
                         $timeThumbGenerationEnd = microtime(true);
-                        $this->vMessage('Preview generated in ' . ($timeThumbGenerationEnd - $timeThumbGenerationStart) . ' sec : ' . $imageUrl);
+                        $this->vMessage('Preview generated in '.($timeThumbGenerationEnd - $timeThumbGenerationStart).' sec : '.$imageUrl);
                     } else {
                         $imageUrl = AssetHelper::getImageUrl($image);
-                        $this->vMessage('original has right size, no preview, instead : ' . $imageUrl);
+                        $this->vMessage('original has right size, no preview, instead : '.$imageUrl);
                     }
 
-                    if ($i == 1) {
+                    if (1 == $i) {
                         $baseImages = $thumbnailImage = $smallImage = basename($imageUrl);
                     } else {
                         $additionalImages[] = basename($imageUrl);
                     }
                 } catch (\Exception $e) {
-
-                    $errorMessage = PHP_EOL . ' | Produit : ' . $this->inProgressProduct->getFullPath() . PHP_EOL;
+                    $errorMessage = PHP_EOL.' | Produit : '.$this->inProgressProduct->getFullPath().PHP_EOL;
                     if ($image) {
-                        $errorMessage .= ' | Image : ' . $image->getFullPath() . PHP_EOL;
+                        $errorMessage .= ' | Image : '.$image->getFullPath().PHP_EOL;
                     }
-                    $errorMessage .= ' | Message : ' . $e->getMessage();
+                    $errorMessage .= ' | Message : '.$e->getMessage();
                     $this->logWarning(self::WARN_GLOBAL_ASSET_PREVIEW_ERROR, $errorMessage);
                 }
-                $i++;
+                ++$i;
             }
-            $result = array(
+            $result = [
                 'base' => AssetHelper::getCleanFilename($baseImages),
                 'thumbnail' => AssetHelper::getCleanFilename($thumbnailImage),
                 'small' => AssetHelper::getCleanFilename($smallImage),
                 'additional' => implode($this->getDefaultMultiValueSeparator(), array_map(function ($additionalImage) {
                     return AssetHelper::getCleanFilename($additionalImage);
-                }, $additionalImages))
-            );
+                }, $additionalImages)),
+            ];
         }
+
         return $result;
     }
 
@@ -685,7 +688,7 @@ class Product extends BaseProductExporter
     {
         $conditioning = intval($this->inProgressProduct->getPackaging());
 
-        $conditioningValues = array("use_config" => 1, "enable" => 0, "conditioning" => 1);
+        $conditioningValues = ['use_config' => 1, 'enable' => 0, 'conditioning' => 1];
         if ($conditioning > 1) {
             $conditioningValues['use_config'] = 0;
             $conditioningValues['enable'] = 1;
@@ -694,7 +697,6 @@ class Product extends BaseProductExporter
 
         return $conditioningValues;
     }
-
 
     protected function postProcessRow()
     {
@@ -706,159 +708,158 @@ class Product extends BaseProductExporter
      */
     protected function isMonoStore()
     {
-        if ($this->isMonoStore === null) {
+        if (null === $this->isMonoStore) {
             $list = new DataObject\StoreView\Listing();
-            if ($list->getCount() == 1) {
+            if (1 == $list->getCount()) {
                 $this->isMonoStore = true;
             } else {
                 $this->isMonoStore = false;
             }
         }
+
         return $this->isMonoStore;
     }
 
     /**
-     * @param string|null $text
-     *
      * @return string|null
      */
     protected function cleanHtml(?string $text)
     {
-
         $acceptedMarkup = [
-            "!doctype",
-            "a",
-            "abbr",
-            "address",
-            "area",
-            "article",
-            "aside",
-            "audio",
-            "b",
-            "base",
-            "bdi",
-            "bdo",
-            "blockquote",
-            "body",
-            "br",
-            "button",
-            "canvas",
-            "caption",
-            "cite",
-            "code",
-            "col",
-            "colgroup",
-            "command",
-            "datalist",
-            "dd",
-            "del",
-            "details",
-            "dfn",
-            "div",
-            "dl",
-            "dt",
-            "em",
-            "embed",
-            "fieldset",
-            "figcaption",
-            "figure",
-            "footer",
-            "form",
-            "h1",
-            "h2",
-            "h3",
-            "h4",
-            "h5",
-            "h6",
-            "head",
-            "header",
-            "hgroup",
-            "hr",
-            "html",
-            "i",
-            "iframe",
-            "img",
-            "input",
-            "ins",
-            "keygen",
-            "kbd",
-            "label",
-            "legend",
-            "li",
-            "link",
-            "map",
-            "mark",
-            "math",
-            "menu",
-            "meta",
-            "meter",
-            "nav",
-            "noscript",
-            "object",
-            "ol",
-            "optgroup",
-            "option",
-            "output",
-            "p",
-            "param",
-            "pre",
-            "progress",
-            "q",
-            "rp",
-            "rt",
-            "ruby",
-            "s",
-            "samp",
-            "script",
-            "section",
-            "select",
-            "small",
-            "source",
-            "span",
-            "strong",
-            "style",
-            "sub",
-            "summary",
-            "sup",
-            "svg",
-            "table",
-            "tbody",
-            "td",
-            "textarea",
-            "tfoot",
-            "th",
-            "thead",
-            "time",
-            "title",
-            "tr",
-            "track",
-            "u",
-            "ul",
-            "var",
-            "video",
-            "wbr"
+            '!doctype',
+            'a',
+            'abbr',
+            'address',
+            'area',
+            'article',
+            'aside',
+            'audio',
+            'b',
+            'base',
+            'bdi',
+            'bdo',
+            'blockquote',
+            'body',
+            'br',
+            'button',
+            'canvas',
+            'caption',
+            'cite',
+            'code',
+            'col',
+            'colgroup',
+            'command',
+            'datalist',
+            'dd',
+            'del',
+            'details',
+            'dfn',
+            'div',
+            'dl',
+            'dt',
+            'em',
+            'embed',
+            'fieldset',
+            'figcaption',
+            'figure',
+            'footer',
+            'form',
+            'h1',
+            'h2',
+            'h3',
+            'h4',
+            'h5',
+            'h6',
+            'head',
+            'header',
+            'hgroup',
+            'hr',
+            'html',
+            'i',
+            'iframe',
+            'img',
+            'input',
+            'ins',
+            'keygen',
+            'kbd',
+            'label',
+            'legend',
+            'li',
+            'link',
+            'map',
+            'mark',
+            'math',
+            'menu',
+            'meta',
+            'meter',
+            'nav',
+            'noscript',
+            'object',
+            'ol',
+            'optgroup',
+            'option',
+            'output',
+            'p',
+            'param',
+            'pre',
+            'progress',
+            'q',
+            'rp',
+            'rt',
+            'ruby',
+            's',
+            'samp',
+            'script',
+            'section',
+            'select',
+            'small',
+            'source',
+            'span',
+            'strong',
+            'style',
+            'sub',
+            'summary',
+            'sup',
+            'svg',
+            'table',
+            'tbody',
+            'td',
+            'textarea',
+            'tfoot',
+            'th',
+            'thead',
+            'time',
+            'title',
+            'tr',
+            'track',
+            'u',
+            'ul',
+            'var',
+            'video',
+            'wbr',
         ];
 
         $acceptedAttributes = [
-            "class",
-            "id",
-            "href",
-            "src",
-            "target",
-            "width",
-            "height"
+            'class',
+            'id',
+            'href',
+            'src',
+            'target',
+            'width',
+            'height',
         ];
 
         if (isset($text)) {
-            if (WebsiteSetting::getByName('clean_html_on_export')->getData() == true) {
-                $acceptedMarkupString = implode("|", $acceptedMarkup);
-                $acceptedAttributesString = implode("|", $acceptedAttributes);
-                $regex = "(<(" . $acceptedMarkupString . ")\s+)(((?!((" . $acceptedAttributesString . ")=[\"'][^\"']*[\"'])).\s*)*)(((" . $acceptedAttributesString . ")=[\"'][^\"']*[\"']\s*)*)(((?!((" . $acceptedAttributesString . ")=[\"'][^\"']*[\"'])).\s*)*)(((" . $acceptedAttributesString . ")=[\"'][^\"']*[\"']\s*)*)(((?!((" . $acceptedAttributesString . ")=[\"'][^\"']*[\"'])).\s*)*)(\s*\/?>)|(<\/(" . $acceptedMarkupString . ")>)|(.*)";
-                $text = preg_replace("/" . $regex . "/U",
-                    "$1$7$11$14$21$24$22", $text);
-            }
-            $text = preg_replace("/\r|\n/", "", $text);
-        }
-        return $text;
+            if (true == WebsiteSetting::getByName('clean_html_on_export')->getData()) {
+                $acceptedMarkupString = implode('|', $acceptedMarkup);
+                $acceptedAttributesString = implode('|', $acceptedAttributes);
+                $regex = '(<('.$acceptedMarkupString.")\s+)(((?!((".$acceptedAttributesString.")=[\"'][^\"']*[\"'])).\s*)*)(((".$acceptedAttributesString.")=[\"'][^\"']*[\"']\s*)*)(((?!((".$acceptedAttributesString.")=[\"'][^\"']*[\"'])).\s*)*)(((".$acceptedAttributesString.")=[\"'][^\"']*[\"']\s*)*)(((?!((".$acceptedAttributesString.")=[\"'][^\"']*[\"'])).\s*)*)(\s*\/?>)|(
+<\ /(".$acceptedMarkupString.')>)|(.*)';
+    $text = preg_replace('/'.$regex.'/U', '$1$7$11$14$21$24$22', $text);
     }
-}
+    $text = preg_replace("/\r|\n/", '', $text);
+    }
+
+    return $text;
+    }
+    }

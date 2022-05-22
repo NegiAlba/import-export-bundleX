@@ -1,6 +1,5 @@
 <?php
 /**
- *
  * @author Géraud ISSERTES <gissertes@galilee.fr>
  * @copyright © 2017 Galilée (www.galilee.fr)
  */
@@ -11,15 +10,13 @@ use Galilee\ImportExportBundle\GalileeImportExportBundle;
 use Galilee\ImportExportBundle\Helper\ConfigHelper;
 use Galilee\ImportExportBundle\Helper\Tools;
 use Galilee\ImportExportBundle\Processor\Exporter\AbstractExporter;
+use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
-use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Output\OutputInterface;
-
 
 class ExportCommand extends AbstractImportExportCommand
 {
-
     public $exportDate;
     public $exportAll;
     public $currentExportDate;
@@ -38,7 +35,7 @@ class ExportCommand extends AbstractImportExportCommand
                 'type', 't',
                 InputOption::VALUE_OPTIONAL,
                 'Export type (defined in var/plugins/PluginImportExport/config/configProcessor.xml)
-                ' . $exportTypes . '
+                '.$exportTypes.'
                 If not defined, run all export'
             )
             ->addOption(
@@ -55,15 +52,13 @@ class ExportCommand extends AbstractImportExportCommand
             )
             ->addArgument('export_path', InputArgument::OPTIONAL,
                 '[Optional] Absolute path. 
-                 Default: ' . $defaultPath
+                 Default: '.$defaultPath
             );
-
     }
 
     /**
-     * @param InputInterface $input
-     * @param OutputInterface $output
-     * @return int|null|void
+     * @return int|void|null
+     *
      * @throws \Exception
      */
     protected function execute(InputInterface $input, OutputInterface $output)
@@ -101,13 +96,16 @@ class ExportCommand extends AbstractImportExportCommand
         } else {
             $this->writeError(
                 'No exporter found in var/plugins/PluginImportExport/config/configProcessor.xml for type "'
-                . $exportType . '"'
+                .$exportType.'"'
             );
         }
+
+        return 0;
     }
 
     /**
      * @param array $exporters
+     *
      * @throws \Exception
      */
     protected function runExport($exporters = [])
@@ -121,31 +119,34 @@ class ExportCommand extends AbstractImportExportCommand
         }
     }
 
-
     /**
-     * Get exporter
+     * Get exporter.
      *
      * @param $exportType
      * @param $exportPath string Root path
      * @param $exportDate
      * @param $exportAll
+     *
      * @return null
+     *
      * @throws \Exception
      */
     protected function getExporter($exportType, $exportPath, $exportDate, $exportAll = false)
     {
         $processor = $this->configHelper->getExporterByType($exportType);
-        $className = '\\' . $processor->filter('class')->text();
+        $className = '\\'.$processor->filter('class')->text();
         $exportSubFolder = Tools::pathSlash($processor->filter('export-sub-folder')->text());
 
         if (!class_exists($className)) {
-            $this->writeError('Class ' . $className . ' doesn\'t exists');
+            $this->writeError('Class '.$className.' doesn\'t exists');
+
             return null;
         }
 
         $processorInstance = new $className();
         if (!$processorInstance instanceof AbstractExporter) {
-            $this->writeError('Class ' . $className . ' must extends AbstractExporter');
+            $this->writeError('Class '.$className.' must extends AbstractExporter');
+
             return null;
         }
 
@@ -161,6 +162,7 @@ class ExportCommand extends AbstractImportExportCommand
             ->setOutput($this->output)
             ->setServerConfig($this->configHelper->getServer())
             ->setLogger($this->logger);
+
         return $processorInstance;
     }
 
@@ -168,7 +170,9 @@ class ExportCommand extends AbstractImportExportCommand
      * Get root export destination path.
      *
      * @param string $inputArgument
+     *
      * @return string
+     *
      * @throws \Exception
      */
     protected function getExportPath($inputArgument = null)
@@ -176,17 +180,20 @@ class ExportCommand extends AbstractImportExportCommand
         $path = $inputArgument
             ?? $this->configHelper->getExportPath()
             ?? GalileeImportExportBundle::EXPORT_FILE_PATH;
+
         return Tools::pathSlash($path);
     }
 
     /**
      * Get export date.
      * Si l'option -d n'est pas fourni, on prend la date du fichier config.
-     * website/var/plugins/PluginImportExport/config/config.xml
+     * website/var/plugins/PluginImportExport/config/config.xml.
      *
      * @param null $optionExportDate
      * @param null $exportType
+     *
      * @return array|mixed|null
+     *
      * @throws \Exception
      */
     protected function getExportDate($optionExportDate = null, $exportType = null)
@@ -195,6 +202,7 @@ class ExportCommand extends AbstractImportExportCommand
         if (!$date) {
             $date = $this->configHelper->getLastExportDate($exportType);
         }
+
         return $date;
     }
 }

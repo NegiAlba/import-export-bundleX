@@ -2,10 +2,10 @@
 
 namespace Galilee\ImportExportBundle\Command;
 
-use Symfony\Component\Console\Input\InputInterface;
-use Symfony\Component\Console\Output\OutputInterface;
-use Symfony\Component\Console\Input\InputOption;
 use Pimcore\Model\DataObject;
+use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Input\InputOption;
+use Symfony\Component\Console\Output\OutputInterface;
 
 class DeleteProductImage extends \Pimcore\Console\AbstractCommand
 {
@@ -31,6 +31,7 @@ class DeleteProductImage extends \Pimcore\Console\AbstractCommand
 
     /**
      * {@inheritdoc}
+     *
      * @throws \Exception
      */
     protected function execute(InputInterface $input, OutputInterface $output)
@@ -55,7 +56,9 @@ class DeleteProductImage extends \Pimcore\Console\AbstractCommand
 
         $offset = $offset + $limit;
         $list = $this->createList($limit, $offset);
-        echo ($count = $list->getCount()) == 0 ? $count . "\n" : $offset . "\n";
+        echo($count = $list->getCount()) == 0 ? $count."\n" : $offset."\n";
+
+        return 0;
     }
 
     /**
@@ -63,6 +66,7 @@ class DeleteProductImage extends \Pimcore\Console\AbstractCommand
      * @param null $offset
      *
      * @return DataObject\Product\Listing
+     *
      * @throws \Exception
      */
     protected function createList($limit = null, $offset = null)
@@ -72,6 +76,7 @@ class DeleteProductImage extends \Pimcore\Console\AbstractCommand
         $list->setOffset($offset);
         $list->setOrderKey('oo_id');
         $list->setOrder('ASC');
+
         return $list;
     }
 }

@@ -1,6 +1,5 @@
 <?php
 /**
- *
  * @author Géraud ISSERTES <gissertes@galilee.fr>
  * @copyright © 2017 Galilée (www.galilee.fr)
  */
@@ -16,7 +15,6 @@ use Pimcore\Model\DataObject;
 
 class Family extends AbstractExporter
 {
-
     public $exportFileName = 'family.csv';
 
     public $columnNames = [
@@ -39,7 +37,7 @@ class Family extends AbstractExporter
         'attribute_options',
         'default_value',
         'group',
-        'attribute_set'
+        'attribute_set',
     ];
 
     public $loggerComponent = 'Export des familles (attributs)';
@@ -63,12 +61,12 @@ class Family extends AbstractExporter
             $csvWriter->addRow($row);
         }
         $csvWriter->close();
-        $this->writeInfo('Fichier d\'export  : ' . $this->getCsvFileFullPath());
+        $this->writeInfo('Fichier d\'export  : '.$this->getCsvFileFullPath());
     }
 
     /**
-     *
      * @return array
+     *
      * @throws Exception
      */
     protected function getData()
@@ -111,9 +109,12 @@ class Family extends AbstractExporter
 
                 foreach ($defaultData as $defaultAttribute) {
                     $exists = false;
-                    for ($i = 0; $i <= count($currentData) && !$exists; $i++) {
-                        if ($currentData[$i]['attribute_code'] == $defaultAttribute['attribute_code']) {
-                            $exists = true;
+                    for ($i = 0; $i < count($currentData) && !$exists; ++$i) {
+                        var_dump($currentData[$i]);
+                        if (array_key_exists('attribute_code', $currentData[$i])) {
+                            if ($currentData[$i]['attribute_code'] == $defaultAttribute['attribute_code']) {
+                                $exists = true;
+                            }
                         }
                     }
                     if (!$exists) {
@@ -124,14 +125,12 @@ class Family extends AbstractExporter
 
             $data = array_merge($data, $currentData);
         }
+
         return $data;
     }
 
     /**
-     * @param DataObject\Objectbrick\Definition $brick
-     * @param null|string $attributeSet
-     *
-     * @return array
+     * @param string|null $attributeSet
      */
     protected function getObjectBrickRows(DataObject\Objectbrick\Definition $brick, $attributeSet = null): array
     {
@@ -155,20 +154,15 @@ class Family extends AbstractExporter
                 $row['frontend_label'] = $field->getTitle();
                 $row['group'] = $brickField['group'];
                 $row['attribute_options'] = BrickHelper::getOptionsFromFields($field);
-                $this->writeWarning('Aucun objet Attribute trouvé pour "' . $brickField['field']->getName() . '". Les valeurs par défaut ont été exportées.');
+                $this->writeWarning('Aucun objet Attribute trouvé pour "'.$brickField['field']->getName().'". Les valeurs par défaut ont été exportées.');
             }
             $fields[] = $row;
         }
+
         return $fields;
     }
 
-
     /**
-     * @param string $attributeCode
-     * @param string $attributeSet
-     * @param string|null $group
-     * @param string $attributeOptions
-     *
      * @return array|null
      */
     protected function getAttributeRow(
@@ -203,14 +197,15 @@ class Family extends AbstractExporter
                 'attribute_set' => $attributeSet,
             ];
         }
+
         return $result;
     }
-
 
     /**
      * @param $attributeSet
      *
      * @return array|null
+     *
      * @throws Exception
      */
     protected function getManufacturerRow(string $attributeSet): array
@@ -226,6 +221,7 @@ class Family extends AbstractExporter
                 $attributeOptions
             );
         }
+
         return $this->getAttributeRow(
             AttributeHelper::MANUFACTURER_CODE,
             $attributeSet,
@@ -238,6 +234,7 @@ class Family extends AbstractExporter
      * @param $attributeSet
      *
      * @return array|null
+     *
      * @throws Exception
      */
     protected function getBrandRow(string $attributeSet): array
@@ -253,6 +250,7 @@ class Family extends AbstractExporter
                 $attributeOptions
             );
         }
+
         return $this->getAttributeRow(
             AttributeHelper::BRAND_CODE,
             $attributeSet,
@@ -261,11 +259,9 @@ class Family extends AbstractExporter
         );
     }
 
-
     /**
      * @param $attributeSet
      *
-     * @return array
      * @throws Exception
      */
     protected function getQuantityPriceTypeRow(string $attributeSet): array
@@ -280,6 +276,7 @@ class Family extends AbstractExporter
                 $this->getDefaultMultiValueSeparator(), $attributeOptions
             );
         }
+
         return $this->getAttributeRow(
             'quantity_price_type',
             $attributeSet,
@@ -288,11 +285,6 @@ class Family extends AbstractExporter
         );
     }
 
-    /**
-     * @param string $attributeSet
-     *
-     * @return array
-     */
     protected function getQuantityPriceRow(string $attributeSet): array
     {
         return $this->getAttributeRow(
@@ -302,9 +294,6 @@ class Family extends AbstractExporter
     }
 
     /**
-     * @param string $attributeSet
-     *
-     * @return array
      * @throws Exception
      */
     protected function getNewItemUnitRow(string $attributeSet): array
@@ -320,6 +309,7 @@ class Family extends AbstractExporter
                 $attributeOptions
             );
         }
+
         return $this->getAttributeRow(
             'new_item_unit',
             $attributeSet,
@@ -329,9 +319,6 @@ class Family extends AbstractExporter
     }
 
     /**
-     * @param string $attributeSet
-     *
-     * @return array
      * @throws Exception
      */
     protected function getNewItemExtCategoryIdRow(string $attributeSet): array
@@ -347,6 +334,7 @@ class Family extends AbstractExporter
                 $attributeOptions
             );
         }
+
         return $this->getAttributeRow(
             'new_item_ext_category_id',
             $attributeSet,
@@ -356,9 +344,6 @@ class Family extends AbstractExporter
     }
 
     /**
-     * @param string $attributeSet
-     *
-     * @return array
      * @throws Exception
      */
     protected function getNumberPiecesPackaging(string $attributeSet): array
@@ -370,9 +355,6 @@ class Family extends AbstractExporter
     }
 
     /**
-     * @param string $attributeSet
-     *
-     * @return array
      * @throws Exception
      */
     protected function getPackagingUnitRow(string $attributeSet): array
@@ -388,6 +370,7 @@ class Family extends AbstractExporter
                 $attributeOptions
             );
         }
+
         return $this->getAttributeRow(
             'packaging_unit',
             $attributeSet,
@@ -396,11 +379,6 @@ class Family extends AbstractExporter
         );
     }
 
-    /**
-     * @param string $attributeSet
-     *
-     * @return array
-     */
     protected function getPcre(string $attributeSet): array
     {
         return $this->getAttributeRow(

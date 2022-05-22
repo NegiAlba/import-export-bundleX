@@ -1,6 +1,5 @@
 <?php
 /**
- *
  * @author Géraud ISSERTES <gissertes@galilee.fr>
  * @copyright © 2017 Galilée (www.galilee.fr)
  */
@@ -9,14 +8,13 @@ namespace Galilee\ImportExportBundle\Command;
 
 use Galilee\ImportExportBundle\Installer;
 use Pimcore\Console\AbstractCommand;
+use Pimcore\Model\DataObject;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
-use Pimcore\Model\DataObject;
 
 class InstallCommand extends AbstractCommand
 {
-
     /**
      * @var Installer\Classes
      */
@@ -79,19 +77,6 @@ class InstallCommand extends AbstractCommand
 
     /**
      * InstallCommand constructor.
-     *
-     * @param Installer\Classes $installerClasses
-     * @param Installer\ConfigProcessor $installerConfigProcessor
-     * @param Installer\Data $installerData
-     * @param Installer\Eiffage $installerEiffage
-     * @param Installer\ProductWebsites $installerProductWebsites
-     * @param Installer\StoreView $installerStoreView
-     * @param Installer\ThumbnailsProfile $installerThumbnailsProfile
-     * @param Installer\WebsiteSettings $installerWebsiteSettings
-     * @param Installer\Attributes $updaterAttributes
-     * @param Installer\EiffageBis $installerEiffageBis
-     * @param Installer\Categories $installerCategories
-     * @param Installer\EiffageTer $installerEiffageTer
      */
     public function __construct(
         Installer\Classes $installerClasses,
@@ -140,10 +125,8 @@ class InstallCommand extends AbstractCommand
     }
 
     /**
-     * @param InputInterface $input
-     * @param OutputInterface $output
+     * @return int|void|null
      *
-     * @return int|null|void
      * @throws \Exception
      */
     protected function execute(InputInterface $input, OutputInterface $output)
@@ -195,6 +178,7 @@ class InstallCommand extends AbstractCommand
         }
         $this->saveObjectBrick();
 
+        return 0;
     }
 
     protected function installData()
@@ -292,6 +276,4 @@ class InstallCommand extends AbstractCommand
             $this->output->writeln($m);
         }
     }
-
-
 }

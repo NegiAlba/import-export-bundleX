@@ -10,7 +10,6 @@ use Symfony\Component\Console\Output\OutputInterface;
 
 class UninstallCommand extends AbstractCommand
 {
-
     /**
      * @var Uninstaller\Prices
      */
@@ -28,10 +27,6 @@ class UninstallCommand extends AbstractCommand
 
     /**
      * UninstallCommand constructor.
-     *
-     * @param Uninstaller\Prices $uninstallerPrices
-     * @param Uninstaller\BrandName $uninstallerBrandName
-     * @param Uninstaller\Stocks $uninstallerStocks
      */
     public function __construct(
         Uninstaller\Prices $uninstallerPrices,
@@ -57,10 +52,7 @@ class UninstallCommand extends AbstractCommand
     }
 
     /**
-     * @param InputInterface $input
-     * @param OutputInterface $output
-     *
-     * @return int|null|void
+     * @return int|void|null
      */
     protected function execute(InputInterface $input, OutputInterface $output)
     {
@@ -77,6 +69,8 @@ class UninstallCommand extends AbstractCommand
                 $this->uninstallStocks();
                 break;
         }
+
+        return 0;
     }
 
     protected function uninstallPrices()

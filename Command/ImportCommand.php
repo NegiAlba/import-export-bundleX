@@ -1,6 +1,5 @@
 <?php
 /**
- *
  * @author Géraud ISSERTES <gissertes@galilee.fr>
  * @copyright © 2017 Galilée (www.galilee.fr)
  */
@@ -16,10 +15,8 @@ use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\DomCrawler\Crawler;
 
-
 class ImportCommand extends AbstractImportExportCommand
 {
-
     protected $from;
 
     protected $to;
@@ -34,20 +31,20 @@ class ImportCommand extends AbstractImportExportCommand
         $importTypes = implode(' | ', $availableTypes);
         $fileNames = '';
         foreach ($availableTypes as $type) {
-            $fileNames .= '      - ' . $type . '.csv' . PHP_EOL;
+            $fileNames .= '      - '.$type.'.csv'.PHP_EOL;
         }
         $this
             ->setName('galilee:import')
-            ->setDescription('Import' .
-                '   Emplacement des fichiers d\'import : ' . $defaultPath . PHP_EOL .
-                '   Nom des fichiers d\'imports : ' . PHP_EOL .
+            ->setDescription('Import'.
+                '   Emplacement des fichiers d\'import : '.$defaultPath.PHP_EOL.
+                '   Nom des fichiers d\'imports : '.PHP_EOL.
                 $fileNames
             )
             ->addOption(
                 'type', 't',
                 InputOption::VALUE_OPTIONAL,
                 'Import type (défini dans var/plugins/PluginImportExport/config/configProcessor.xml)
-                ' . $importTypes . '
+                '.$importTypes.'
                 Exécute tous les imports si non défini.'
             )
             ->addOption(
@@ -63,9 +60,8 @@ class ImportCommand extends AbstractImportExportCommand
     }
 
     /**
-     * @param InputInterface $input
-     * @param OutputInterface $output
-     * @return int|null|void
+     * @return int|void|null
+     *
      * @throws \Exception
      */
     protected function execute(InputInterface $input, OutputInterface $output)
@@ -93,47 +89,52 @@ class ImportCommand extends AbstractImportExportCommand
         if ($importers) {
             $this->runImport($importers);
         } else {
-            $this->writeError('No importer found in var/plugins/PluginImportExport/config/configProcessor.xml for type "' . $importType . '"');
+            $this->writeError('No importer found in var/plugins/PluginImportExport/config/configProcessor.xml for type "'.$importType.'"');
         }
+
+        return 0;
     }
 
     protected function runImport($importers = [])
     {
-
         /** @var AbstractProcessor $importer */
         foreach ($importers as $importer) {
             $result = $importer->preProcess();
-            if ($result !== false) {
+            if (false !== $result) {
                 $importer->process();
                 $importer->postProcess();
             } else {
-                $this->output->writeln('No file to import (' . $importer->getType() . ')');
+                $this->output->writeln('No file to import ('.$importer->getType().')');
             }
         }
     }
 
     /**
-     * Get importer from var/plugins/PluginImportExport/config/config.xml
+     * Get importer from var/plugins/PluginImportExport/config/config.xml.
      *
      * @param $importType
+     *
      * @return AbstractImporter
+     *
      * @throws \Exception
      */
     protected function getImporter($importType)
     {
         $processor = $this->configHelper->getImporterByType($importType);
-        if ($processor->count() == 0) {
-            throw new \Exception('L\'import "' . $importType . '" n\'est pas défini dans var/plugins/PluginImportExport/config/configProcessor.xml');
+        if (0 == $processor->count()) {
+            throw new \Exception('L\'import "'.$importType.'" n\'est pas défini dans var/plugins/PluginImportExport/config/configProcessor.xml');
         }
         $className = $processor->filter('class')->text();
         if (!class_exists($className)) {
-            $this->writeError('Class ' . $className . ' doesn\'t exists');
+            $this->writeError('Class '.$className.' doesn\'t exists');
+
             return null;
         }
 
         $processorInstance = new $className();
         if (!$processorInstance instanceof AbstractImporter) {
-            $this->writeError('Class ' . $className . ' must extends AbstractImporter');
+            $this->writeError('Class '.$className.' must extends AbstractImporter');
+
             return null;
         }
 
@@ -144,16 +145,15 @@ class ImportCommand extends AbstractImportExportCommand
 
         /** @var Crawler $baseFileNameNode */
         $baseFileNameNode = $processor->filter('baseFileName');
-        $baseFileName = $baseFileNameNode->count() == 1
+        $baseFileName = 1 == $baseFileNameNode->count()
             ? $baseFileNameNode->text()
             : $importType;
 
         /** @var Crawler $csvSeparatorNode */
         $csvSeparatorNode = $processor->filter('csvSeparator');
-        $csvSeparator = $csvSeparatorNode->count() == 1
+        $csvSeparator = 1 == $csvSeparatorNode->count()
             ? $csvSeparatorNode->text()
             : AbstractProcessor::DEFAULT_CSV_SEPARATOR;
-
 
         $processorInstance
             ->setFrom($this->from)
@@ -171,12 +171,13 @@ class ImportCommand extends AbstractImportExportCommand
         return $processorInstance;
     }
 
-
     /**
      * Get import destination path.
      *
      * @param $processor
-     * @return null|string
+     *
+     * @return string|null
+     *
      * @throws \Exception
      */
     protected function getImportPath($processor = null)
@@ -187,15 +188,16 @@ class ImportCommand extends AbstractImportExportCommand
         );
 
         $path = null;
-        if ($processor && $processor->filter('folder')->count() === 1) {
+        if ($processor && 1 === $processor->filter('folder')->count()) {
             $path = $processor->filter('folder')->text();
-            if ($path && $path[0] !== '/') {
-                $path = $globalPath . $path;
+            if ($path && '/' !== $path[0]) {
+                $path = $globalPath.$path;
             }
         }
         if (!$path) {
             $path = $globalPath;
         }
+
         return Tools::pathSlash($path);
     }
 }

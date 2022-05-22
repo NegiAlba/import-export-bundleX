@@ -1,44 +1,33 @@
 <?php
 /**
- *
  * @author Géraud ISSERTES <gissertes@galilee.fr>
  * @copyright © 2017 Galilée (www.galilee.fr)
  */
 
 namespace Galilee\ImportExportBundle\Installer;
 
-use Pimcore\Console\AbstractCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\ArrayInput;
 
 class Classes extends AbstractInstaller
 {
-
-    const INSTALL_CLASSES_PATH = InstallerInterface::INSTALL_PATH . 'classes' . DIRECTORY_SEPARATOR;
-    const TEMPLATE_INSTALL_CLASSES_PATH = InstallerInterface::TEMPLATE_INSTALL_PATH . 'classes-template' . DIRECTORY_SEPARATOR;
+    public const INSTALL_CLASSES_PATH = InstallerInterface::INSTALL_PATH.'classes'.DIRECTORY_SEPARATOR;
+    public const TEMPLATE_INSTALL_CLASSES_PATH = InstallerInterface::TEMPLATE_INSTALL_PATH.'classes-template'.DIRECTORY_SEPARATOR;
 
     /** @var Command Pimcore Import command definition:import:class */
     public $importClassCommand;
 
-    /**
-     * @return Command
-     */
     public function getImportClassCommand(): Command
     {
         return $this->importClassCommand;
     }
 
-    /**
-     * @param Command $importClassCommand
-     *
-     * @return Classes
-     */
     public function setImportClassCommand(Command $importClassCommand): Classes
     {
         $this->importClassCommand = $importClassCommand;
+
         return $this;
     }
-
 
     /**
      * @throws \Exception
@@ -50,7 +39,6 @@ class Classes extends AbstractInstaller
         }
     }
 
-
     /**
      * @param $filename
      *
@@ -58,24 +46,24 @@ class Classes extends AbstractInstaller
      */
     protected function _createClass($filename)
     {
-        $arguments = array(
+        $arguments = [
             'path' => $filename,
             '--force' => true,
-        );
+        ];
         $input = new ArrayInput($arguments);
         $this->importClassCommand->run($input, $this->output);
     }
 
-
     protected function _getClasses()
     {
-        $classes = array();
-        $classFilesGlobal = glob(self::INSTALL_CLASSES_PATH . '*.json');
-        $classFilesLocal = glob(self::TEMPLATE_INSTALL_CLASSES_PATH . '*.json');
+        $classes = [];
+        $classFilesGlobal = glob(self::INSTALL_CLASSES_PATH.'*.json');
+        $classFilesLocal = glob(self::TEMPLATE_INSTALL_CLASSES_PATH.'*.json');
         $classFiles = array_merge($classFilesGlobal, $classFilesLocal);
         foreach ($classFiles as $filename) {
             $classes[] = $filename;
         }
+
         return $classes;
     }
 
@@ -94,6 +82,7 @@ class Classes extends AbstractInstaller
                 unset($json[$key]);
             }
         }
+
         return json_encode($json);
     }
 }
